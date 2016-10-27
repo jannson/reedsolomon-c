@@ -51,9 +51,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "input file not found\n");
         exit(1);
     }
-
-    rs = reed_solomon_new(redundancy, corrupted);
-    
+ 
     gettimeofday(&tv, 0);
     seed = tv.tv_sec ^ tv.tv_usec;
     seed = 996035588;
@@ -85,6 +83,9 @@ int main(int argc, char **argv) {
     begin = rdtsc();
     fec_init();
     end = rdtsc();
+
+    rs = reed_solomon_new(redundancy, corrupted);
+
     fprintf(stderr, "%d cycles to create FEC buffer\n",
 	    (unsigned int) (end-begin));
     for(i = 0, j = 0; i < size; i += blocksize, j++) {
