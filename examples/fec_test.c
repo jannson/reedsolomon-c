@@ -32,9 +32,8 @@ int main(int argc, char **argv) {
     int corrupted;
     reed_solomon* rs;
     unsigned long long begin, end;
-    unsigned char *data, *fec_data;
-    unsigned char *data_blocks[DATA_SHARDS_MAX];
-    unsigned char **fec_blocks;
+    unsigned char *data;
+    unsigned char **data_blocks;
     unsigned char *zilch;
 
     if(argc != 5) {
@@ -44,7 +43,6 @@ int main(int argc, char **argv) {
 
     gettimeofday(&tv, 0);
     seed = tv.tv_sec ^ tv.tv_usec;
-    //seed = 996035588;
     srandom(seed);
 
     begin = rdtsc();
@@ -67,11 +65,13 @@ int main(int argc, char **argv) {
     fstat(fd, &st);
     size = st.st_size;
     nrBlocks = (size+blockSize-1) / blockSize;
-    i = (nrBlocks+dataShards-1)/dataShards;
+    nrBlocks = ((nrBlocks+dataShards-1)/dataShards) * dataShards;
+    i = nrBlocks / dataShards;
     nrFecBlocks = i*parityShards;
+    nrShards = nrBlocks + nrFecBlocks;
     fprintf(stderr, "size=%d nr=%d\n", size, nrBlocks);
 
-    data = (unsigned char*)malloc((nrBlocks+nrFecBlocks) * blockSize);
+    data = (unsigned char*)malloc(nrShards * blockSize);
     n = read(fd, data, size);
     if(n < size) {
         fprintf(stderr, "Short read\n");
@@ -79,14 +79,11 @@ int main(int argc, char **argv) {
         exit(1);
     }
     close(fd);
+    memset(data+size, 0, nrShards*blockSize - size);
 
-    for(i = 0; i < nrBlocks; i++) {
+    data_blocks = (unsigned char**)malloc( nrShards * sizeof(unsigned char**) );
+    for(i = 0; i < nrShards; i++) {
         data_blocks[i] = data + i*blockSize;
-    }
-    fec_data = &data[nrBlocks];
-    fec_blocks = &data_blocks[nrBlocks];
-    for(i = 0; i < nrFecBlocks; i++) {
-        fec_blocks[i] = fec_data + i*blockSize;
     }
 
     begin = rdtsc();
@@ -94,9 +91,9 @@ int main(int argc, char **argv) {
     end = rdtsc();
     fprintf(stderr, "times %ld\n", (unsigned long) (end-begin));
 
-    zilch = (unsigned char*)calloc(1, nrBlocks+nrFecBlocks);
+    zilch = (unsigned char*)calloc(1, nrShards);
     memset(zilch, 0, sizeof(zilch));
-    corrupted = nrFecBlocks;
+    corrupted = parityShards;
     for(i = 0; i < corrupted; i++) {
         int corr = random() % nrBlocks;
         memset(data + blockSize * corr, 137, blockSize);
@@ -110,6 +107,12 @@ int main(int argc, char **argv) {
     fprintf(stderr, "times %ld\n", (unsigned long) (end-begin));
 
     write(1, data, size);
-    exit(0);
+
+    free(data);
+    free(data_blocks);
+    free(zilch);
+    reed_solomon_release(rs);
+
+    return 0;
 }
 
