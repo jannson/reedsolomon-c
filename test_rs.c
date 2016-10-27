@@ -100,6 +100,26 @@ void test_multiply(void) {
     assert(0 == rlt);
 }
 
+void test_inverse(void) {
+    printf("%s:\n", __FUNCTION__);
+}
+
+void test_one_encoding(void) {
+    printf("%s:\n", __FUNCTION__);
+}
+
+void test_encoding(void) {
+    printf("%s:\n", __FUNCTION__);
+}
+
+void test_reconstruct(void) {
+    printf("%s:\n", __FUNCTION__);
+}
+
+void benchmarkEncode(void) {
+    printf("%s:\n", __FUNCTION__);
+}
+
 void test_001(void) {
     reed_solomon* rs = reed_solomon_new(11, 6);
     print_matrix1(rs->m, rs->data_shards, rs->data_shards);
