@@ -25,6 +25,9 @@ void print_buf(gf* buf, char *fmt, size_t len) {
     printf("\n");
 }
 
+void test_galois(void) {
+}
+
 void test_001(void) {
     reed_solomon* rs = reed_solomon_new(11, 6);
     print_matrix1(rs->m, rs->data_shards, rs->data_shards);

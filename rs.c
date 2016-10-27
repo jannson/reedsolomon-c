@@ -334,73 +334,7 @@ slow_addmul1(gf *dst1, gf *src1, gf c, int sz)
     GF_ADDMULC( *dst , *src );
 }
 
-#if defined i386 && defined USE_ASSEMBLER
-
-#define LOOPSIZE 8
-
-static void
-addmul1(gf *dst1, gf *src1, gf c, int sz)
-{
-    USE_GF_MULC ;
-
-    GF_MULC0(c) ;
-
-    if(((unsigned long)dst1 % LOOPSIZE) ||
-       ((unsigned long)src1 % LOOPSIZE) ||
-       (sz % LOOPSIZE)) {
-    slow_addmul1(dst1, src1, c, sz);
-    return;
-    }
-
-    asm volatile("xorl %%eax,%%eax;\n"
-         "  xorl %%edx,%%edx;\n"
-         ".align 32;\n"
-         "1:"
-         "  addl  $8, %%edi;\n"
-
-         "  movb  (%%esi), %%al;\n"
-         "  movb 4(%%esi), %%dl;\n"
-         "  movb  (%%ebx,%%eax), %%al;\n"
-         "  movb  (%%ebx,%%edx), %%dl;\n"
-         "  xorb  %%al,  (%%edi);\n"
-         "  xorb  %%dl, 4(%%edi);\n"
-
-         "  movb 1(%%esi), %%al;\n"
-         "  movb 5(%%esi), %%dl;\n"
-         "  movb  (%%ebx,%%eax), %%al;\n"
-         "  movb  (%%ebx,%%edx), %%dl;\n"
-         "  xorb  %%al, 1(%%edi);\n"
-         "  xorb  %%dl, 5(%%edi);\n"
-
-         "  movb 2(%%esi), %%al;\n"
-         "  movb 6(%%esi), %%dl;\n"
-         "  movb  (%%ebx,%%eax), %%al;\n"
-         "  movb  (%%ebx,%%edx), %%dl;\n"
-         "  xorb  %%al, 2(%%edi);\n"
-         "  xorb  %%dl, 6(%%edi);\n"
-
-         "  movb 3(%%esi), %%al;\n"
-         "  movb 7(%%esi), %%dl;\n"
-         "  addl  $8, %%esi;\n"
-         "  movb  (%%ebx,%%eax), %%al;\n"
-         "  movb  (%%ebx,%%edx), %%dl;\n"
-         "  xorb  %%al, 3(%%edi);\n"
-         "  xorb  %%dl, 7(%%edi);\n"
-
-         "  cmpl  %%ecx, %%esi;\n"
-         "  jb 1b;"
-         : :
-
-         "b" (__gf_mulc_),
-         "D" (dst1-8),
-         "S" (src1),
-         "c" (sz+src1) :
-         "memory", "eax", "edx"
-    );
-}
-#else
 # define addmul1 slow_addmul1
-#endif
 
 static void addmul(gf *dst, gf *src, gf c, int sz) {
     // fprintf(stderr, "Dst=%p Src=%p, gf=%02x sz=%d\n", dst, src, c, sz);
@@ -460,73 +394,7 @@ slow_mul1(gf *dst1, gf *src1, gf c, int sz)
     GF_MULC( *dst , *src );
 }
 
-#if defined i386 && defined USE_ASSEMBLER
-static void
-mul1(gf *dst1, gf *src1, gf c, int sz)
-{
-    USE_GF_MULC ;
-
-    GF_MULC0(c) ;
-
-    if(((unsigned long)dst1 % LOOPSIZE) ||
-       ((unsigned long)src1 % LOOPSIZE) ||
-       (sz % LOOPSIZE)) {
-    slow_mul1(dst1, src1, c, sz);
-    return;
-    }
-
-    asm volatile("pushl %%eax;\n"
-         "pushl %%edx;\n"
-         "xorl %%eax,%%eax;\n"
-         "  xorl %%edx,%%edx;\n"
-         "1:"
-         "  addl  $8, %%edi;\n"
-
-         "  movb  (%%esi), %%al;\n"
-         "  movb 4(%%esi), %%dl;\n"
-         "  movb  (%%ebx,%%eax), %%al;\n"
-         "  movb  (%%ebx,%%edx), %%dl;\n"
-         "  movb  %%al,  (%%edi);\n"
-         "  movb  %%dl, 4(%%edi);\n"
-
-         "  movb 1(%%esi), %%al;\n"
-         "  movb 5(%%esi), %%dl;\n"
-         "  movb  (%%ebx,%%eax), %%al;\n"
-         "  movb  (%%ebx,%%edx), %%dl;\n"
-         "  movb  %%al, 1(%%edi);\n"
-         "  movb  %%dl, 5(%%edi);\n"
-
-         "  movb 2(%%esi), %%al;\n"
-         "  movb 6(%%esi), %%dl;\n"
-         "  movb  (%%ebx,%%eax), %%al;\n"
-         "  movb  (%%ebx,%%edx), %%dl;\n"
-         "  movb  %%al, 2(%%edi);\n"
-         "  movb  %%dl, 6(%%edi);\n"
-
-         "  movb 3(%%esi), %%al;\n"
-         "  movb 7(%%esi), %%dl;\n"
-         "  addl  $8, %%esi;\n"
-         "  movb  (%%ebx,%%eax), %%al;\n"
-         "  movb  (%%ebx,%%edx), %%dl;\n"
-         "  movb  %%al, 3(%%edi);\n"
-         "  movb  %%dl, 7(%%edi);\n"
-
-         "  cmpl  %%ecx, %%esi;\n"
-         "  jb 1b;\n"
-         "  popl %%edx;\n"
-         "  popl %%eax;"
-         : :
-
-         "b" (__gf_mulc_),
-         "D" (dst1-8),
-         "S" (src1),
-         "c" (sz+src1) :
-         "memory", "eax", "edx"
-    );
-}
-#else
 # define mul1 slow_mul1
-#endif
 
 static inline void mul(gf *dst, gf *src, gf c, int sz) {
     /*fprintf(stderr, "%p = %02x * %p\n", dst, c, src);*/
