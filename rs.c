@@ -595,6 +595,10 @@ static gf galExp(gf a, gf n) {
     return gf_exp[logResult];
 }
 
+static gf galMultiply(gf a, gf b) {
+    return gf_mul_table[ ((int)a << 8) + (int)b ];
+}
+
 static gf* vandermonde(int nrows, int ncols) {
     int row, col, ptr;
     gf* matrix = (gf*)RS_MALLOC(nrows * ncols);
@@ -610,6 +614,9 @@ static gf* vandermonde(int nrows, int ncols) {
     return matrix;
 }
 
+/*
+ * Not check for input params
+ * */
 static gf* sub_matrix(gf* matrix, int rmin, int cmin, int rmax, int cmax,  int nrows, int ncols) {
     int i, j, ptr = 0;
     gf* new_m = (gf*)RS_MALLOC( (rmax-rmin) * (cmax-cmin) );
@@ -638,7 +645,7 @@ static gf* multiply1(gf *a, int ar, int ac, gf *b, int br, int bc) {
             for(c = 0; c < bc; c++) {
                 tg = 0;
                 for(i = 0; i < ac; i++) {
-                    tg ^= gf_mul_table[ (a[r*ac+i] << 8) + b[i*bc+c] ];
+                    tg ^= gf_mul_table[ ((int)a[r*ac+i] << 8) + (int)b[i*bc+c] ];
                 }
 
                 new_m[ptr++] = tg;

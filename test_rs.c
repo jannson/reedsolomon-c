@@ -26,6 +26,78 @@ void print_buf(gf* buf, char *fmt, size_t len) {
 }
 
 void test_galois(void) {
+    printf("%s:\n", __FUNCTION__);
+
+    //copy from golang rs version
+    assert(galMultiply(3, 4) == 12);
+    assert(galMultiply(7, 7) == 21);
+    assert(galMultiply(23, 45) == 41);
+
+    {
+        gf in[] = {0, 1, 2, 3, 4, 5, 6, 10, 50, 100, 150, 174, 201, 255, 99, 32, 67, 85};
+        gf out[sizeof(in)/sizeof(gf)] = {0};
+        gf expect[] = {0x0, 0x19, 0x32, 0x2b, 0x64, 0x7d, 0x56, 0xfa, 0xb8, 0x6d, 0xc7, 0x85, 0xc3, 0x1f, 0x22, 0x7, 0x25, 0xfe};
+        gf expect2[] = {0x0, 0xb1, 0x7f, 0xce, 0xfe, 0x4f, 0x81, 0x9e, 0x3, 0x6, 0xe8, 0x75, 0xbd, 0x40, 0x36, 0xa3, 0x95, 0xcb};
+        int rlt;
+        addmul(out, in, 25, sizeof(int)/sizeof(gf));
+        rlt = memcmp(out, expect, sizeof(int)/sizeof(gf));
+        assert(0 == rlt);
+
+        memset(out, 0, sizeof(in)/sizeof(gf));
+        addmul(out, in, 177, sizeof(in)/sizeof(gf));
+        rlt = memcmp(out, expect2, sizeof(int)/sizeof(gf));
+        assert(0 == rlt);
+    }
+
+    assert(galExp(2,2) == 4);
+    assert(galExp(5,20) == 235);
+    assert(galExp(13,7) == 43);
+}
+
+void test_sub_matrix(void) {
+    int r, c, ptr, nrows = 10, ncols = 20;
+    gf* m1 = (gf*)RS_MALLOC(nrows * ncols);
+    gf *test1;
+
+    printf("%s:\n", __FUNCTION__);
+
+    ptr = 0;
+    for(r = 0; r < nrows; r++) {
+        for(c = 0; c < ncols; c++) {
+            m1[ptr] = ptr;
+            ptr++;
+        }
+    }
+    test1 = sub_matrix(m1, 0, 0, 3, 4, nrows, ncols);
+    for(r = 0; r < 3; r++) {
+        for(c = 0; c < 4; c++) {
+            assert(test1[r*4 + c] == (r*ncols + c));
+        }
+    }
+    free(test1);
+
+    test1 = sub_matrix(m1, 3, 2, 7, 9, nrows, ncols);
+    for(r = 0; r < (7-3); r++) {
+        for(c = 0; c < (9-2); c++) {
+            assert(test1[r*(9-2) + c] == ((r+3)*ncols + (c+2)));
+        }
+    }
+
+    free(m1);
+}
+
+void test_multiply(void) {
+    gf a[] = {1,2,3,4};
+    gf b[] = {5,6,7,8};
+    gf exp[] = {11,22,19,42};
+    gf *out;
+    int rlt;
+
+    printf("%s:\n", __FUNCTION__);
+
+    out = multiply1(a, 2, 2, b, 2, 2);
+    rlt = memcmp(out, exp, 4);
+    assert(0 == rlt);
 }
 
 void test_001(void) {
@@ -240,10 +312,15 @@ void test_004(void) {
 
 int main(void) {
     fec_init();
+
+    test_galois();
+    test_sub_matrix();
+    test_multiply();
+
     //test_001();
     //test_002();
     //test_003();
-    test_004();
+    //test_004();
 
     return 0;
 }

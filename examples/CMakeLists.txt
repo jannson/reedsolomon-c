@@ -6,7 +6,7 @@ add_definitions( -O0 -g -rdynamic -fno-inline -Wstrict-prototypes -std=gnu99 -Wa
 
 set(CMAKE_SYSTEM_NAME Linux)
 
-SET(CMAKE_BUILD_TYPE release)
+SET(CMAKE_BUILD_TYPE debug)
 #SET(CMAKE_EXE_LINKER_FLAGS "-static")
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
