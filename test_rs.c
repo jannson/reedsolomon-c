@@ -10,6 +10,9 @@
 #include "rs.h"
 #include "rs.c"
 
+void print_matrix1(gf* matrix, int nrows, int ncols);
+void print_matrix2(gf** matrix, int nrows, int ncols);
+
 void print_buf(gf* buf, char *fmt, size_t len) {
     size_t i = 0;
     while(i < len) {
@@ -100,7 +103,7 @@ void test_003(void) {
     reed_solomon* rs = reed_solomon_new(nrDataBlocks, nrFecBlocks);
 
     printf("%s:\n", __FUNCTION__);
-    printf("text size=%d\n", (int)(sizeof(text)/sizeof(char)) );
+    printf("text size=%d\n", (int)(sizeof(text)/sizeof(char) - 1) );
 
     for(i = 0; i < nrDataBlocks; i++) {
         data_blocks[i] = (unsigned char*)&text[i*block_size];
@@ -108,11 +111,13 @@ void test_003(void) {
 
     memset(output, 0, sizeof(output));
     memcpy(output, text, nrDataBlocks*block_size);
+    print_matrix1((gf*)output, nrDataBlocks + nrFecBlocks, block_size);
     for(i = 0; i < nrFecBlocks; i++) {
         fec_blocks[i] = (unsigned char*)&output[i*block_size + nrDataBlocks*block_size];
     }
     reed_solomon_encode(rs, data_blocks, fec_blocks, block_size);
-    print_buf((gf*)output, "%d ", nrFecBlocks*block_size + nrDataBlocks*block_size);
+    //print_buf((gf*)output, "%d ", nrFecBlocks*block_size + nrDataBlocks*block_size);
+    print_matrix1((gf*)output, nrDataBlocks + nrFecBlocks, block_size);
 
     //decode
     text[1*block_size] = 'x';

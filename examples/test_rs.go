@@ -14,8 +14,10 @@ func main() {
 	enc, err := reedsolomon.New(dataShards, parShards)
 	checkErr(err)
 
-	data := make([]byte, dataShards)
-	copy(data, []byte("hello world hello world"))
+	text := "hello world hello world "
+	data := make([]byte, len(text))
+	copy(data, []byte(text))
+	fmt.Println("data len:", len(data))
 
 	shards, err := enc.Split(data)
 	checkErr(err)

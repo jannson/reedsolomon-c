@@ -684,7 +684,7 @@ static long long rdtsc(void)
     return ( (((long long)hi) << 32) | ((long long) low));
 }
 
-static void print_matrix1(gf* matrix, int nrows, int ncols) {
+void print_matrix1(gf* matrix, int nrows, int ncols) {
     int i, j;
     printf("matrix (%d,%d):\n", nrows, ncols);
     for(i = 0; i < nrows; i++) {
@@ -695,7 +695,7 @@ static void print_matrix1(gf* matrix, int nrows, int ncols) {
     }
 }
 
-static void print_matrix2(gf** matrix, int nrows, int ncols) {
+void print_matrix2(gf** matrix, int nrows, int ncols) {
     int i, j;
     printf("matrix (%d,%d):\n", nrows, ncols);
     for(i = 0; i < nrows; i++) {
