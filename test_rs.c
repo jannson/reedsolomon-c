@@ -149,9 +149,9 @@ void test_003(void) {
 
 void test_004(void) {
     char text[] = "hello world hello world ";
-    int dataShards = 6;
-    int parityShards = 4;
-    int blockSize = 2;
+    int dataShards = 30;
+    int parityShards = 21;
+    int blockSize = 280;
     struct timeval tv;
     int i, j, n, seed, size, nrShards, nrBlocks, nrFecBlocks;
     unsigned char *origin, *data;
@@ -165,13 +165,13 @@ void test_004(void) {
 
     fec_init();
 
-    size = sizeof(text)/sizeof(char)-1;
-    //size = 1024*1024;
+    //size = sizeof(text)/sizeof(char)-1;
+    size = 1024*1024;
     origin = malloc(size);
-    memcpy(origin, text, size);
-    /* for(i = 0; i < size; i++) {
+    //memcpy(origin, text, size);
+    for(i = 0; i < size; i++) {
         origin[i] = (unsigned char)(random() % 255);
-    } */
+    }
 
     nrBlocks = (size+blockSize-1) / blockSize;
     nrBlocks = ((nrBlocks+dataShards-1)/dataShards) * dataShards;
@@ -182,8 +182,8 @@ void test_004(void) {
     memcpy(data, origin, size);
     memset(data + size, 0, nrShards*blockSize - size);
     printf("nrBlocks=%d nrFecBlocks=%d nrShards=%d n=%d left=%d\n", nrBlocks, nrFecBlocks, nrShards, n, nrShards*blockSize - size);
-    print_buf(origin, "%d ", size);
-    print_buf(data, "%d ", nrShards*blockSize);
+    //print_buf(origin, "%d ", size);
+    //print_buf(data, "%d ", nrShards*blockSize);
 
     data_blocks = (unsigned char**)malloc( nrShards * sizeof(unsigned char**) );
     for(i = 0; i < nrShards; i++) {
@@ -199,32 +199,34 @@ void test_004(void) {
     zilch = (unsigned char*)calloc(1, nrShards);
     n = parityShards;
 
-    int es[100];
+    /* int es[100];
     es[0] = 3;
     es[1] = 3;
     es[2] = 2;
-    es[3] = 8;
+    es[3] = 8; */
 
-    for(i = 0; i < n; i++) {
-        //j = random() % (nrBlocks-1);
-        j = es[i];
+    for(i = 0; i < n-2; i++) {
+        j = random() % (nrBlocks-1);
+        //j = es[i];
         memset(data + j*blockSize, 137, blockSize);
         zilch[j] = 1; //erased!
         printf("erased %d\n", j);
     }
-    /*if(nrFecBlocks > 2) {
+    if(nrFecBlocks > 2) {
         for(i = 0; i < 2; i++) {
             j = nrBlocks + (random() % nrFecBlocks);
             memset(data + j*blockSize, 139, blockSize);
             zilch[j] = 1;
+            printf("erased %d\n", j);
         }
-    }*/
+    }
 
     reed_solomon_reconstruct(rs, data_blocks, zilch, nrShards, blockSize);
     i = memcmp(origin, data, size);
     //print_buf(origin, "%d ", nrBlocks);
     //print_buf(data, "%d ", nrBlocks);
     printf("rlt=%d\n", i);
+    assert(0 == i);
 
     free(origin);
     free(data);
