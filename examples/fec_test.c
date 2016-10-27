@@ -90,12 +90,17 @@ int main(int argc, char **argv) {
     for(i = 0, j = 0; i < size; i += blocksize, j++) {
         data_blocks[j] = data + i;
     }
+    fprintf(stderr, "j=%d\n", j);
     for(i = 0, j = 0; j < redundancy; i += blocksize, j++) {
         fec_blocks[j] = fec_data + i;
     }
+    fprintf(stderr, "j=%d\n", j);
 
     begin = rdtsc();
-    reed_solomon_encode(rs, data_blocks, fec_blocks, blocksize);
+    j = nrBlocks / rs->data_shards - 1;
+    for(i = 0; i < j; i++) {
+        reed_solomon_encode(rs, data_blocks + i*rs->data_shards, fec_blocks + i*rs->parity_shards, blocksize);
+    }
     end = rdtsc();
 
     fprintf(stderr,"times %ld %f %f\n",
@@ -135,9 +140,14 @@ int main(int argc, char **argv) {
     }
 
     begin = rdtsc();
-    reed_solomon_decode(rs, data_blocks, blocksize,
-           dec_fec_blocks, fec_block_nos, erased_blocks,
-           nr_fec_blocks);
+    j = nrBlocks / rs->data_shards - 1;
+    for(i = 0; i < j; i++) {
+        reed_solomon_decode(rs, data_blocks + i*rs->data_shards, blocksize,
+               dec_fec_blocks + i*nr_fec_blocks,
+               fec_block_nos + i*nr_fec_blocks,
+               erased_blocks + i*nr_fec_blocks,
+               nr_fec_blocks);
+    }
     end = rdtsc();
     fprintf(stderr,"times %ld %f %f\n",
         (unsigned long) (end-begin),
