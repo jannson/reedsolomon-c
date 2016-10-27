@@ -963,15 +963,16 @@ int reed_solomon_decode(reed_solomon* rs,
     nshards = 0;
     dataShards = rs->data_shards;
     for(i = 0; i < dataShards; i++) {
-        if(i != erased_blocks[j]) {
+        if(j < nr_fec_blocks && i == erased_blocks[j]) {
+            //ignore the invalid block
+            j++;
+        } else {
             /* this row is ok */
             for(c = 0; c < dataShards; c++) {
                 dataDecodeMatrix[subMatrixRow*dataShards + c] = m[i*dataShards + c];
             }
             subShards[subMatrixRow] = data_blocks[i];
             subMatrixRow++;
-        } else {
-            j++;
         }
     }
 
@@ -1059,8 +1060,8 @@ int reed_solomon_reconstruct(reed_solomon* rs,
 
     data_blocks = shards;
     n = nr_shards / rs->shards;
-    fec_marks = &marks[n*ds];
-    fec_blocks = &shards[n*ds];
+    fec_marks = marks + n*ds;
+    fec_blocks = shards + n*ds;
 
     for(j = 0; j < n; j++) {
         dn = 0;

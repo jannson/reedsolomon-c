@@ -84,6 +84,8 @@ void test_002(void) {
             fec_block_nos, erased_blocks, nr_fec_blocks);
 
     printf("fixed:%s\n", text);
+
+    reed_solomon_release(rs);
 }
 
 void test_003(void) {
@@ -117,7 +119,7 @@ void test_003(void) {
     }
     reed_solomon_encode(rs, data_blocks, fec_blocks, block_size);
     //print_buf((gf*)output, "%d ", nrFecBlocks*block_size + nrDataBlocks*block_size);
-    print_matrix1((gf*)output, nrDataBlocks + nrFecBlocks, block_size);
+    //print_matrix1((gf*)output, nrDataBlocks + nrFecBlocks, block_size);
 
     //decode
     text[1*block_size] = 'x';
@@ -147,8 +149,8 @@ void test_003(void) {
 
 void test_004(void) {
     char text[] = "hello world hello world ";
-    int dataShards = 12;
-    int parityShards = 6;
+    int dataShards = 6;
+    int parityShards = 4;
     int blockSize = 2;
     struct timeval tv;
     int i, j, n, seed, size, nrShards, nrBlocks, nrFecBlocks;
@@ -164,11 +166,12 @@ void test_004(void) {
     fec_init();
 
     size = sizeof(text)/sizeof(char)-1;
+    //size = 1024*1024;
     origin = malloc(size);
-    /*for(i = 0; i < size; i++) {
-        origin[i] = (unsigned char)(random() % 255);
-    }*/
     memcpy(origin, text, size);
+    /* for(i = 0; i < size; i++) {
+        origin[i] = (unsigned char)(random() % 255);
+    } */
 
     nrBlocks = (size+blockSize-1) / blockSize;
     nrBlocks = ((nrBlocks+dataShards-1)/dataShards) * dataShards;
@@ -177,7 +180,10 @@ void test_004(void) {
     nrShards = nrBlocks + nrFecBlocks;
     data = malloc(nrShards * blockSize);
     memcpy(data, origin, size);
-    printf("nrBlocks=%d nrFecBlocks=%d nrShards=%d n=%d\n", nrBlocks, nrFecBlocks, nrShards, n);
+    memset(data + size, 0, nrShards*blockSize - size);
+    printf("nrBlocks=%d nrFecBlocks=%d nrShards=%d n=%d left=%d\n", nrBlocks, nrFecBlocks, nrShards, n, nrShards*blockSize - size);
+    print_buf(origin, "%d ", size);
+    print_buf(data, "%d ", nrShards*blockSize);
 
     data_blocks = (unsigned char**)malloc( nrShards * sizeof(unsigned char**) );
     for(i = 0; i < nrShards; i++) {
@@ -188,20 +194,36 @@ void test_004(void) {
     reed_solomon_encode2(rs, data_blocks, nrShards, blockSize);
     i = memcmp(origin, data, size);
     assert(0 == i);
-    print_matrix2(data_blocks, nrShards, blockSize);
+    //print_matrix2(data_blocks, nrShards, blockSize);
 
     zilch = (unsigned char*)calloc(1, nrShards);
-    n = nrFecBlocks;
+    n = parityShards;
+
+    int es[100];
+    es[0] = 3;
+    es[1] = 3;
+    es[2] = 2;
+    es[3] = 8;
+
     for(i = 0; i < n; i++) {
-        j = random() % (nrBlocks-1);
+        //j = random() % (nrBlocks-1);
+        j = es[i];
         memset(data + j*blockSize, 137, blockSize);
         zilch[j] = 1; //erased!
         printf("erased %d\n", j);
     }
+    /*if(nrFecBlocks > 2) {
+        for(i = 0; i < 2; i++) {
+            j = nrBlocks + (random() % nrFecBlocks);
+            memset(data + j*blockSize, 139, blockSize);
+            zilch[j] = 1;
+        }
+    }*/
+
     reed_solomon_reconstruct(rs, data_blocks, zilch, nrShards, blockSize);
     i = memcmp(origin, data, size);
-    print_buf(origin, "%d ", nrBlocks);
-    print_buf(data, "%d ", nrBlocks);
+    //print_buf(origin, "%d ", nrBlocks);
+    //print_buf(data, "%d ", nrBlocks);
     printf("rlt=%d\n", i);
 
     free(origin);
@@ -215,8 +237,7 @@ int main(void) {
     fec_init();
     //test_001();
     //test_002();
-
-    test_003();
+    //test_003();
     test_004();
 
     return 0;
