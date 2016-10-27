@@ -103,7 +103,7 @@ void test_003(void) {
     reed_solomon* rs = reed_solomon_new(nrDataBlocks, nrFecBlocks);
 
     printf("%s:\n", __FUNCTION__);
-    printf("text size=%d\n", (int)(sizeof(text)/sizeof(char) - 1) );
+    //printf("text size=%d\n", (int)(sizeof(text)/sizeof(char) - 1) );
 
     for(i = 0; i < nrDataBlocks; i++) {
         data_blocks[i] = (unsigned char*)&text[i*block_size];
@@ -111,7 +111,7 @@ void test_003(void) {
 
     memset(output, 0, sizeof(output));
     memcpy(output, text, nrDataBlocks*block_size);
-    print_matrix1((gf*)output, nrDataBlocks + nrFecBlocks, block_size);
+    //print_matrix1((gf*)output, nrDataBlocks + nrFecBlocks, block_size);
     for(i = 0; i < nrFecBlocks; i++) {
         fec_blocks[i] = (unsigned char*)&output[i*block_size + nrDataBlocks*block_size];
     }
@@ -145,12 +145,79 @@ void test_003(void) {
     reed_solomon_release(rs);
 }
 
+void test_004(void) {
+    char text[] = "hello world hello world ";
+    int dataShards = 12;
+    int parityShards = 6;
+    int blockSize = 2;
+    struct timeval tv;
+    int i, j, n, seed, size, nrShards, nrBlocks, nrFecBlocks;
+    unsigned char *origin, *data;
+    unsigned char **data_blocks;
+    unsigned char *zilch;
+    reed_solomon *rs;
+
+    gettimeofday(&tv, 0);
+    seed = tv.tv_sec ^ tv.tv_usec;
+    srandom(seed);
+
+    fec_init();
+
+    size = sizeof(text)/sizeof(char)-1;
+    origin = malloc(size);
+    /*for(i = 0; i < size; i++) {
+        origin[i] = (unsigned char)(random() % 255);
+    }*/
+    memcpy(origin, text, size);
+
+    nrBlocks = (size+blockSize-1) / blockSize;
+    nrBlocks = ((nrBlocks+dataShards-1)/dataShards) * dataShards;
+    n = nrBlocks / dataShards;
+    nrFecBlocks = n*parityShards;
+    nrShards = nrBlocks + nrFecBlocks;
+    data = malloc(nrShards * blockSize);
+    memcpy(data, origin, size);
+    printf("nrBlocks=%d nrFecBlocks=%d nrShards=%d n=%d\n", nrBlocks, nrFecBlocks, nrShards, n);
+
+    data_blocks = (unsigned char**)malloc( nrShards * sizeof(unsigned char**) );
+    for(i = 0; i < nrShards; i++) {
+        data_blocks[i] = data + i*blockSize;
+    }
+
+    rs = reed_solomon_new(dataShards, parityShards);
+    reed_solomon_encode2(rs, data_blocks, nrShards, blockSize);
+    i = memcmp(origin, data, size);
+    assert(0 == i);
+    print_matrix2(data_blocks, nrShards, blockSize);
+
+    zilch = (unsigned char*)calloc(1, nrShards);
+    n = nrFecBlocks;
+    for(i = 0; i < n; i++) {
+        j = random() % (nrBlocks-1);
+        memset(data + j*blockSize, 137, blockSize);
+        zilch[j] = 1; //erased!
+        printf("erased %d\n", j);
+    }
+    reed_solomon_reconstruct(rs, data_blocks, zilch, nrShards, blockSize);
+    i = memcmp(origin, data, size);
+    print_buf(origin, "%d ", nrBlocks);
+    print_buf(data, "%d ", nrBlocks);
+    printf("rlt=%d\n", i);
+
+    free(origin);
+    free(data);
+    free(data_blocks);
+    free(zilch);
+    reed_solomon_release(rs);
+}
+
 int main(void) {
     fec_init();
     //test_001();
     //test_002();
 
     test_003();
+    test_004();
 
     return 0;
 }

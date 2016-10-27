@@ -1051,12 +1051,16 @@ int reed_solomon_reconstruct(reed_solomon* rs,
     unsigned int fec_block_nos[DATA_SHARDS_MAX];
     unsigned int erased_blocks[DATA_SHARDS_MAX];
     unsigned char* fec_marks;
-    unsigned char** data_blocks;
-    int i, j, dn, pn, n, ds = rs->data_shards, ps = rs->parity_shards, ss = rs->shards;
+    unsigned char **data_blocks, **fec_blocks;
+    int i, j, dn, pn, n;
+    int ds = rs->data_shards;
+    int ps = rs->parity_shards;
     int err = 0;
-    n = nr_shards / rs->shards;
-    fec_marks = &marks[n*rs->shards];
+
     data_blocks = shards;
+    n = nr_shards / rs->shards;
+    fec_marks = &marks[n*ds];
+    fec_blocks = &shards[n*ds];
 
     for(j = 0; j < n; j++) {
         dn = 0;
@@ -1072,7 +1076,7 @@ int reed_solomon_reconstruct(reed_solomon* rs,
                 if(!fec_marks[i]) {
                     //got valid fec row
                     fec_block_nos[pn] = i;
-                    dec_fec_blocks[pn] = shards[n*ss+i];
+                    dec_fec_blocks[pn] = fec_blocks[i];
                     pn++;
                 }
             }
@@ -1086,11 +1090,13 @@ int reed_solomon_reconstruct(reed_solomon* rs,
                         , erased_blocks
                         , dn);
             } else {
+                //error but we continue
                 err = -1;
             }
         }
         data_blocks += ds;
         marks += ds;
+        fec_blocks += ps;
         fec_marks += ps;
     }
 

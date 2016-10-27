@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 2.6)
 project (examples)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
-#add_definitions( -O0 -g -rdynamic -fno-inline -Wstrict-prototypes -std=gnu99 -Wall)
-add_definitions( -Os -Wstrict-prototypes -Wstrict-prototypes -std=gnu99 -Wall)
+add_definitions( -O0 -g -rdynamic -fno-inline -Wstrict-prototypes -std=gnu99 -Wall)
+#add_definitions( -Os -Wstrict-prototypes -Wstrict-prototypes -std=gnu99 -Wall)
 
 set(CMAKE_SYSTEM_NAME Linux)
 
