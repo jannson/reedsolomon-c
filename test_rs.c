@@ -7,7 +7,20 @@
 #include <sys/time.h>
 
 #define PROFILE
+#include "rs.h"
 #include "rs.c"
+
+void print_buf(gf* buf, char *fmt, size_t len) {
+    size_t i = 0;
+    while(i < len) {
+        printf(fmt, buf[i]);
+        i++;
+        if((i % 16) == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
+}
 
 void test_001(void) {
     reed_solomon* rs = reed_solomon_new(11, 6);

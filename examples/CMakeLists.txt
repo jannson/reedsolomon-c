@@ -14,3 +14,6 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 add_executable(test_rs ../test_rs.c)
 target_link_libraries(test_rs)
 
+add_executable(fec_test fec_test.c ../rs.c)
+target_link_libraries(fec_test)
+

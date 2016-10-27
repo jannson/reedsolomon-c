@@ -1,4 +1,5 @@
 #ifndef __RS_H_
+#define __RS_H_
 
 /* use small value to save memory */
 #define DATA_SHARDS_MAX (255)
@@ -12,9 +13,14 @@ typedef struct _reed_solomon {
     int data_shards;
     int parity_shards;
     int shards;
-    gf* m;
-    gf* parity;
+    unsigned char* m;
+    unsigned char* parity;
 } reed_solomon;
+
+/**
+ * MUST inital one time
+ * */
+void fec_init(void);
 
 reed_solomon* reed_solomon_new(int data_shards, int parity_shards);
 void reed_solomon_release(reed_solomon* rs);

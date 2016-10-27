@@ -5,6 +5,7 @@
 #include <string.h>
 #include <assert.h>
 #include <sys/time.h>
+#include <fcntl.h>
 #include "../rs.h"
 
 #ifndef PROFILE
@@ -35,6 +36,7 @@ int main(int argc, char **argv) {
     int seed;
     long long begin, end;
     int fd;
+    reed_solomon* rs;
 
     if(argc != 5) {
         fprintf(stderr, "example: ./fec_test 10 256 10 input.txt > output.txt\n");
@@ -44,11 +46,13 @@ int main(int argc, char **argv) {
     redundancy = atoi(argv[1]);
     blocksize = atoi(argv[2]);
     corrupted = atoi(argv[3]);
-    fd = open(argv[4]);
+    fd = open(argv[4], O_RDONLY);
     if(fd < 0) {
         fprintf(stderr, "input file not found\n");
         exit(1);
     }
+
+    rs = reed_solomon_new(redundancy, corrupted);
     
     gettimeofday(&tv, 0);
     seed = tv.tv_sec ^ tv.tv_usec;
@@ -91,7 +95,7 @@ int main(int argc, char **argv) {
     }
 
     begin = rdtsc();
-    fec_encode(blocksize, data_blocks, nrBlocks, fec_blocks, redundancy);
+    reed_solomon_encode(rs, data_blocks, fec_blocks, blocksize);
     end = rdtsc();
 
     fprintf(stderr,"times %ld %f %f\n", 
@@ -132,7 +136,7 @@ int main(int argc, char **argv) {
 	}
 
 	begin = rdtsc();
-	fec_decode(blocksize, data_blocks, nrBlocks, 
+	reed_solomon_decode(rs, data_blocks, blocksize,
 		   dec_fec_blocks, fec_block_nos, erased_blocks, 
 		   nr_fec_blocks);
 	end = rdtsc();
