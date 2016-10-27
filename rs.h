@@ -18,7 +18,7 @@ typedef struct _reed_solomon {
 } reed_solomon;
 
 /**
- * MUST inital one time
+ * MUST initial one time
  * */
 void fec_init(void);
 
@@ -53,14 +53,14 @@ int reed_solomon_decode(reed_solomon* rs,
         unsigned int *erased_blocks,
         int nr_fec_blocks);
 
-/** 
+/**
  * input:
  * rs
  * shards[rs->shards][block_size]
  * */
 int reed_solomon_encode2(reed_solomon* rs, unsigned char** shards, int block_size);
 
-/** 
+/**
  * input:
  * rs
  * shards[rs->shards][block_size]
