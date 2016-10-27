@@ -36,7 +36,7 @@ func main() {
 
 	err = dec.Reconstruct(shards)
 	checkErr(err)
-	fmt.Println(shards)
+	fmt.Println("decode:", shards)
 }
 
 func checkErr(err error) {

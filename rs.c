@@ -42,7 +42,7 @@
  * but fastest operation is achieved with 8 bit elements
  * This is the only parameter you may want to change.
  */
-#define GF_BITS  8	/* code over GF(2**GF_BITS) - change to suit */
+#define GF_BITS  8  /* code over GF(2**GF_BITS) - change to suit */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,27 +55,27 @@
  * stuff used for testing purposes only
  */
 
-#ifdef	TEST
+#ifdef  TEST
 #define DEB(x)
 #define DDB(x) x
-#define	DEBUG	0	/* minimal debugging */
+#define DEBUG   0   /* minimal debugging */
 
 #include <sys/time.h>
 #define DIFF_T(a,b) \
-	(1+ 1000000*(a.tv_sec - b.tv_sec) + (a.tv_usec - b.tv_usec) )
+    (1+ 1000000*(a.tv_sec - b.tv_sec) + (a.tv_usec - b.tv_usec) )
 
 #define TICK(t) \
-	{struct timeval x ; \
-	gettimeofday(&x, NULL) ; \
-	t = x.tv_usec + 1000000* (x.tv_sec & 0xff ) ; \
-	}
+    {struct timeval x ; \
+    gettimeofday(&x, NULL) ; \
+    t = x.tv_usec + 1000000* (x.tv_sec & 0xff ) ; \
+    }
 #define TOCK(t) \
-	{ u_long t1 ; TICK(t1) ; \
-	  if (t1 < t) t = 256000000 + t1 - t ; \
-	  else t = t1 - t ; \
-	  if (t == 0) t = 1 ;}
-	
-u_long ticks[10];	/* vars for timekeeping */
+    { u_long t1 ; TICK(t1) ; \
+      if (t1 < t) t = 256000000 + t1 - t ; \
+      else t = t1 - t ; \
+      if (t == 0) t = 1 ;}
+
+u_long ticks[10];   /* vars for timekeeping */
 #else
 #define DEB(x)
 #define DDB(x)
@@ -102,30 +102,30 @@ u_long ticks[10];	/* vars for timekeeping */
 #endif
 typedef unsigned char gf;
 
-#define	GF_SIZE ((1 << GF_BITS) - 1)	/* powers of \alpha */
+#define GF_SIZE ((1 << GF_BITS) - 1)    /* powers of \alpha */
 
 /*
  * Primitive polynomials - see Lin & Costello, Appendix A,
  * and  Lee & Messerschmitt, p. 453.
  */
-static char *allPp[] = {    /* GF_BITS	polynomial		*/
-    NULL,		    /*  0	no code			*/
-    NULL,		    /*  1	no code			*/
-    "111",		    /*  2	1+x+x^2			*/
-    "1101",		    /*  3	1+x+x^3			*/
-    "11001",		    /*  4	1+x+x^4			*/
-    "101001",		    /*  5	1+x^2+x^5		*/
-    "1100001",		    /*  6	1+x+x^6			*/
-    "10010001",		    /*  7	1 + x^3 + x^7		*/
-    "101110001",	    /*  8	1+x^2+x^3+x^4+x^8	*/
-    "1000100001",	    /*  9	1+x^4+x^9		*/
-    "10010000001",	    /* 10	1+x^3+x^10		*/
-    "101000000001",	    /* 11	1+x^2+x^11		*/
-    "1100101000001",	    /* 12	1+x+x^4+x^6+x^12	*/
-    "11011000000001",	    /* 13	1+x+x^3+x^4+x^13	*/
-    "110000100010001",	    /* 14	1+x+x^6+x^10+x^14	*/
-    "1100000000000001",	    /* 15	1+x+x^15		*/
-    "11010000000010001"	    /* 16	1+x+x^3+x^12+x^16	*/
+static char *allPp[] = {    /* GF_BITS  polynomial      */
+    NULL,           /*  0   no code         */
+    NULL,           /*  1   no code         */
+    "111",          /*  2   1+x+x^2         */
+    "1101",         /*  3   1+x+x^3         */
+    "11001",            /*  4   1+x+x^4         */
+    "101001",           /*  5   1+x^2+x^5       */
+    "1100001",          /*  6   1+x+x^6         */
+    "10010001",         /*  7   1 + x^3 + x^7       */
+    "101110001",        /*  8   1+x^2+x^3+x^4+x^8   */
+    "1000100001",       /*  9   1+x^4+x^9       */
+    "10010000001",      /* 10   1+x^3+x^10      */
+    "101000000001",     /* 11   1+x^2+x^11      */
+    "1100101000001",        /* 12   1+x+x^4+x^6+x^12    */
+    "11011000000001",       /* 13   1+x+x^3+x^4+x^13    */
+    "110000100010001",      /* 14   1+x+x^6+x^10+x^14   */
+    "1100000000000001",     /* 15   1+x+x^15        */
+    "11010000000010001"     /* 16   1+x+x^3+x^12+x^16   */
 };
 
 
@@ -138,10 +138,10 @@ static char *allPp[] = {    /* GF_BITS	polynomial		*/
  * In any case the macro gf_mul(x,y) takes care of multiplications.
  */
 
-static gf gf_exp[2*GF_SIZE];	/* index->poly form conversion table	*/
-static int gf_log[GF_SIZE + 1];	/* Poly->index form conversion table	*/
-static gf inverse[GF_SIZE+1];	/* inverse of field elem.		*/
-				/* inv[\alpha**i]=\alpha**(GF_SIZE-i-1)	*/
+static gf gf_exp[2*GF_SIZE];    /* index->poly form conversion table    */
+static int gf_log[GF_SIZE + 1]; /* Poly->index form conversion table    */
+static gf inverse[GF_SIZE+1];   /* inverse of field elem.       */
+                /* inv[\alpha**i]=\alpha**(GF_SIZE-i-1) */
 
 /*
  * modnn(x) computes x % GF_SIZE, where GF_SIZE is 2**GF_BITS - 1,
@@ -151,8 +151,8 @@ static inline gf
 modnn(int x)
 {
     while (x >= GF_SIZE) {
-	x -= GF_SIZE;
-	x = (x >> GF_BITS) + (x & GF_SIZE);
+    x -= GF_SIZE;
+    x = (x >> GF_BITS) + (x & GF_SIZE);
     }
     return x;
 }
@@ -169,7 +169,7 @@ modnn(int x)
  * A value related to the multiplication is held in a local variable
  * declared with USE_GF_MULC . See usage in addmul1().
  */
-static gf gf_mul_table[(GF_SIZE + 1)*(GF_SIZE + 1)] 
+static gf gf_mul_table[(GF_SIZE + 1)*(GF_SIZE + 1)]
 #ifdef WINDOWS
 __attribute__((aligned (16)))
 #else
@@ -189,18 +189,18 @@ init_mul_table(void)
 {
     int i, j;
     for (i=0; i< GF_SIZE+1; i++)
-	for (j=0; j< GF_SIZE+1; j++)
-	    gf_mul_table[(i<<8)+j] = gf_exp[modnn(gf_log[i] + gf_log[j]) ] ;
+    for (j=0; j< GF_SIZE+1; j++)
+        gf_mul_table[(i<<8)+j] = gf_exp[modnn(gf_log[i] + gf_log[j]) ] ;
 
     for (j=0; j< GF_SIZE+1; j++)
-	gf_mul_table[j] = gf_mul_table[j<<8] = 0;
+    gf_mul_table[j] = gf_mul_table[j<<8] = 0;
 }
 
 /*
  * Generate GF(2**m) from the irreducible polynomial p(X) in p[0]..p[m]
  * Lookup tables:
- *     index->polynomial form		gf_exp[] contains j= \alpha^i;
- *     polynomial form -> index form	gf_log[ j = \alpha^i ] = i
+ *     index->polynomial form       gf_exp[] contains j= \alpha^i;
+ *     polynomial form -> index form    gf_log[ j = \alpha^i ] = i
  * \alpha=x is the primitive element of GF(2^m)
  *
  * For efficiency, gf_exp[] has size 2*GF_SIZE, so that a simple
@@ -219,7 +219,7 @@ generate_gf(void)
     gf mask;
     char *Pp =  allPp[GF_BITS] ;
 
-    mask = 1;	/* x ** 0 = 1 */
+    mask = 1;   /* x ** 0 = 1 */
     gf_exp[GF_BITS] = 0; /* will be updated at the end of the 1st loop */
     /*
      * first, generate the (polynomial representation of) powers of \alpha,
@@ -228,14 +228,14 @@ generate_gf(void)
      * The first GF_BITS powers are simply bits shifted to the left.
      */
     for (i = 0; i < GF_BITS; i++, mask <<= 1 ) {
-	gf_exp[i] = mask;
-	gf_log[gf_exp[i]] = i;
-	/*
-	 * If Pp[i] == 1 then \alpha ** i occurs in poly-repr
-	 * gf_exp[GF_BITS] = \alpha ** GF_BITS
-	 */
-	if ( Pp[i] == '1' )
-	    gf_exp[GF_BITS] ^= mask;
+    gf_exp[i] = mask;
+    gf_log[gf_exp[i]] = i;
+    /*
+     * If Pp[i] == 1 then \alpha ** i occurs in poly-repr
+     * gf_exp[GF_BITS] = \alpha ** GF_BITS
+     */
+    if ( Pp[i] == '1' )
+        gf_exp[GF_BITS] ^= mask;
     }
     /*
      * now gf_exp[GF_BITS] = \alpha ** GF_BITS is complete, so can als
@@ -250,19 +250,19 @@ generate_gf(void)
      */
     mask = 1 << (GF_BITS - 1 ) ;
     for (i = GF_BITS + 1; i < GF_SIZE; i++) {
-	if (gf_exp[i - 1] >= mask)
-	    gf_exp[i] = gf_exp[GF_BITS] ^ ((gf_exp[i - 1] ^ mask) << 1);
-	else
-	    gf_exp[i] = gf_exp[i - 1] << 1;
-	gf_log[gf_exp[i]] = i;
+    if (gf_exp[i - 1] >= mask)
+        gf_exp[i] = gf_exp[GF_BITS] ^ ((gf_exp[i - 1] ^ mask) << 1);
+    else
+        gf_exp[i] = gf_exp[i - 1] << 1;
+    gf_log[gf_exp[i]] = i;
     }
     /*
      * log(0) is not defined, so use a special value
      */
-    gf_log[0] =	GF_SIZE ;
+    gf_log[0] = GF_SIZE ;
     /* set the extended gf_exp values for fast multiply */
     for (i = 0 ; i < GF_SIZE ; i++)
-	gf_exp[i + GF_SIZE] = gf_exp[i] ;
+    gf_exp[i + GF_SIZE] = gf_exp[i] ;
 
     /*
      * again special cases. 0 has no inverse. This used to
@@ -272,7 +272,7 @@ generate_gf(void)
     inverse[0] = 0 ;
     inverse[1] = 1;
     for (i=2; i<=GF_SIZE; i++)
-	inverse[i] = gf_exp[GF_SIZE-gf_log[i]];
+    inverse[i] = gf_exp[GF_SIZE-gf_log[i]];
 }
 
 /*
@@ -285,7 +285,7 @@ generate_gf(void)
  * unrolled 16 times, a good value for 486 and pentium-class machines.
  * The case c=0 is also optimized, whereas c=1 is not. These
  * calls are unfrequent in my typical apps so I did not bother.
- * 
+ *
  * Note that gcc on
  */
 #if 0
@@ -307,31 +307,31 @@ slow_addmul1(gf *dst1, gf *src1, gf c, int sz)
 
 #if (UNROLL > 1) /* unrolling by 8/16 is quite effective on the pentium */
     for (; dst < lim ; dst += UNROLL, src += UNROLL ) {
-	GF_ADDMULC( dst[0] , src[0] );
-	GF_ADDMULC( dst[1] , src[1] );
-	GF_ADDMULC( dst[2] , src[2] );
-	GF_ADDMULC( dst[3] , src[3] );
+    GF_ADDMULC( dst[0] , src[0] );
+    GF_ADDMULC( dst[1] , src[1] );
+    GF_ADDMULC( dst[2] , src[2] );
+    GF_ADDMULC( dst[3] , src[3] );
 #if (UNROLL > 4)
-	GF_ADDMULC( dst[4] , src[4] );
-	GF_ADDMULC( dst[5] , src[5] );
-	GF_ADDMULC( dst[6] , src[6] );
-	GF_ADDMULC( dst[7] , src[7] );
+    GF_ADDMULC( dst[4] , src[4] );
+    GF_ADDMULC( dst[5] , src[5] );
+    GF_ADDMULC( dst[6] , src[6] );
+    GF_ADDMULC( dst[7] , src[7] );
 #endif
 #if (UNROLL > 8)
-	GF_ADDMULC( dst[8] , src[8] );
-	GF_ADDMULC( dst[9] , src[9] );
-	GF_ADDMULC( dst[10] , src[10] );
-	GF_ADDMULC( dst[11] , src[11] );
-	GF_ADDMULC( dst[12] , src[12] );
-	GF_ADDMULC( dst[13] , src[13] );
-	GF_ADDMULC( dst[14] , src[14] );
-	GF_ADDMULC( dst[15] , src[15] );
+    GF_ADDMULC( dst[8] , src[8] );
+    GF_ADDMULC( dst[9] , src[9] );
+    GF_ADDMULC( dst[10] , src[10] );
+    GF_ADDMULC( dst[11] , src[11] );
+    GF_ADDMULC( dst[12] , src[12] );
+    GF_ADDMULC( dst[13] , src[13] );
+    GF_ADDMULC( dst[14] , src[14] );
+    GF_ADDMULC( dst[15] , src[15] );
 #endif
     }
 #endif
     lim += UNROLL - 1 ;
-    for (; dst < lim; dst++, src++ )		/* final components */
-	GF_ADDMULC( *dst , *src );
+    for (; dst < lim; dst++, src++ )        /* final components */
+    GF_ADDMULC( *dst , *src );
 }
 
 #if defined i386 && defined USE_ASSEMBLER
@@ -345,58 +345,58 @@ addmul1(gf *dst1, gf *src1, gf c, int sz)
 
     GF_MULC0(c) ;
 
-    if(((unsigned long)dst1 % LOOPSIZE) || 
-       ((unsigned long)src1 % LOOPSIZE) || 
+    if(((unsigned long)dst1 % LOOPSIZE) ||
+       ((unsigned long)src1 % LOOPSIZE) ||
        (sz % LOOPSIZE)) {
-	slow_addmul1(dst1, src1, c, sz);
-	return;
+    slow_addmul1(dst1, src1, c, sz);
+    return;
     }
 
     asm volatile("xorl %%eax,%%eax;\n"
-		 "	xorl %%edx,%%edx;\n"
-		 ".align 32;\n"
-		 "1:"
-		 "	addl  $8, %%edi;\n"
-		 
-		 "	movb  (%%esi), %%al;\n"
-		 "	movb 4(%%esi), %%dl;\n"
-		 "	movb  (%%ebx,%%eax), %%al;\n"
-		 "	movb  (%%ebx,%%edx), %%dl;\n"
-		 "	xorb  %%al,  (%%edi);\n"
-		 "	xorb  %%dl, 4(%%edi);\n"
-		 
-		 "	movb 1(%%esi), %%al;\n"
-		 "	movb 5(%%esi), %%dl;\n"
-		 "	movb  (%%ebx,%%eax), %%al;\n"
-		 "	movb  (%%ebx,%%edx), %%dl;\n"
-		 "	xorb  %%al, 1(%%edi);\n"
-		 "	xorb  %%dl, 5(%%edi);\n"
-		 
-		 "	movb 2(%%esi), %%al;\n"
-		 "	movb 6(%%esi), %%dl;\n"
-		 "	movb  (%%ebx,%%eax), %%al;\n"
-		 "	movb  (%%ebx,%%edx), %%dl;\n"
-		 "	xorb  %%al, 2(%%edi);\n"
-		 "	xorb  %%dl, 6(%%edi);\n"
-		 
-		 "	movb 3(%%esi), %%al;\n"
-		 "	movb 7(%%esi), %%dl;\n"
-		 "	addl  $8, %%esi;\n"
-		 "	movb  (%%ebx,%%eax), %%al;\n"
-		 "	movb  (%%ebx,%%edx), %%dl;\n"
-		 "	xorb  %%al, 3(%%edi);\n"
-		 "	xorb  %%dl, 7(%%edi);\n"
-		 
-		 "	cmpl  %%ecx, %%esi;\n"
-		 "	jb 1b;"
-		 : : 
-		 
-		 "b" (__gf_mulc_),
-		 "D" (dst1-8),
-		 "S" (src1),
-		 "c" (sz+src1) :
-		 "memory", "eax", "edx"
-	);
+         "  xorl %%edx,%%edx;\n"
+         ".align 32;\n"
+         "1:"
+         "  addl  $8, %%edi;\n"
+
+         "  movb  (%%esi), %%al;\n"
+         "  movb 4(%%esi), %%dl;\n"
+         "  movb  (%%ebx,%%eax), %%al;\n"
+         "  movb  (%%ebx,%%edx), %%dl;\n"
+         "  xorb  %%al,  (%%edi);\n"
+         "  xorb  %%dl, 4(%%edi);\n"
+
+         "  movb 1(%%esi), %%al;\n"
+         "  movb 5(%%esi), %%dl;\n"
+         "  movb  (%%ebx,%%eax), %%al;\n"
+         "  movb  (%%ebx,%%edx), %%dl;\n"
+         "  xorb  %%al, 1(%%edi);\n"
+         "  xorb  %%dl, 5(%%edi);\n"
+
+         "  movb 2(%%esi), %%al;\n"
+         "  movb 6(%%esi), %%dl;\n"
+         "  movb  (%%ebx,%%eax), %%al;\n"
+         "  movb  (%%ebx,%%edx), %%dl;\n"
+         "  xorb  %%al, 2(%%edi);\n"
+         "  xorb  %%dl, 6(%%edi);\n"
+
+         "  movb 3(%%esi), %%al;\n"
+         "  movb 7(%%esi), %%dl;\n"
+         "  addl  $8, %%esi;\n"
+         "  movb  (%%ebx,%%eax), %%al;\n"
+         "  movb  (%%ebx,%%edx), %%dl;\n"
+         "  xorb  %%al, 3(%%edi);\n"
+         "  xorb  %%dl, 7(%%edi);\n"
+
+         "  cmpl  %%ecx, %%esi;\n"
+         "  jb 1b;"
+         : :
+
+         "b" (__gf_mulc_),
+         "D" (dst1-8),
+         "S" (src1),
+         "c" (sz+src1) :
+         "memory", "eax", "edx"
+    );
 }
 #else
 # define addmul1 slow_addmul1
@@ -413,7 +413,7 @@ static void addmul(gf *dst, gf *src, gf c, int sz) {
  * unrolled 16 times, a good value for 486 and pentium-class machines.
  * The case c=0 is also optimized, whereas c=1 is not. These
  * calls are unfrequent in my typical apps so I did not bother.
- * 
+ *
  * Note that gcc on
  */
 #if 0
@@ -433,31 +433,31 @@ slow_mul1(gf *dst1, gf *src1, gf c, int sz)
 
 #if (UNROLL > 1) /* unrolling by 8/16 is quite effective on the pentium */
     for (; dst < lim ; dst += UNROLL, src += UNROLL ) {
-	GF_MULC( dst[0] , src[0] );
-	GF_MULC( dst[1] , src[1] );
-	GF_MULC( dst[2] , src[2] );
-	GF_MULC( dst[3] , src[3] );
+    GF_MULC( dst[0] , src[0] );
+    GF_MULC( dst[1] , src[1] );
+    GF_MULC( dst[2] , src[2] );
+    GF_MULC( dst[3] , src[3] );
 #if (UNROLL > 4)
-	GF_MULC( dst[4] , src[4] );
-	GF_MULC( dst[5] , src[5] );
-	GF_MULC( dst[6] , src[6] );
-	GF_MULC( dst[7] , src[7] );
+    GF_MULC( dst[4] , src[4] );
+    GF_MULC( dst[5] , src[5] );
+    GF_MULC( dst[6] , src[6] );
+    GF_MULC( dst[7] , src[7] );
 #endif
 #if (UNROLL > 8)
-	GF_MULC( dst[8] , src[8] );
-	GF_MULC( dst[9] , src[9] );
-	GF_MULC( dst[10] , src[10] );
-	GF_MULC( dst[11] , src[11] );
-	GF_MULC( dst[12] , src[12] );
-	GF_MULC( dst[13] , src[13] );
-	GF_MULC( dst[14] , src[14] );
-	GF_MULC( dst[15] , src[15] );
+    GF_MULC( dst[8] , src[8] );
+    GF_MULC( dst[9] , src[9] );
+    GF_MULC( dst[10] , src[10] );
+    GF_MULC( dst[11] , src[11] );
+    GF_MULC( dst[12] , src[12] );
+    GF_MULC( dst[13] , src[13] );
+    GF_MULC( dst[14] , src[14] );
+    GF_MULC( dst[15] , src[15] );
 #endif
     }
 #endif
     lim += UNROLL - 1 ;
-    for (; dst < lim; dst++, src++ )		/* final components */
-	GF_MULC( *dst , *src );
+    for (; dst < lim; dst++, src++ )        /* final components */
+    GF_MULC( *dst , *src );
 }
 
 #if defined i386 && defined USE_ASSEMBLER
@@ -468,61 +468,61 @@ mul1(gf *dst1, gf *src1, gf c, int sz)
 
     GF_MULC0(c) ;
 
-    if(((unsigned long)dst1 % LOOPSIZE) || 
-       ((unsigned long)src1 % LOOPSIZE) || 
+    if(((unsigned long)dst1 % LOOPSIZE) ||
+       ((unsigned long)src1 % LOOPSIZE) ||
        (sz % LOOPSIZE)) {
-	slow_mul1(dst1, src1, c, sz);
-	return;
+    slow_mul1(dst1, src1, c, sz);
+    return;
     }
 
     asm volatile("pushl %%eax;\n"
-		 "pushl %%edx;\n"
-		 "xorl %%eax,%%eax;\n"
-		 "	xorl %%edx,%%edx;\n"
-		 "1:"
-		 "	addl  $8, %%edi;\n"
-		 
-		 "	movb  (%%esi), %%al;\n"
-		 "	movb 4(%%esi), %%dl;\n"
-		 "	movb  (%%ebx,%%eax), %%al;\n"
-		 "	movb  (%%ebx,%%edx), %%dl;\n"
-		 "	movb  %%al,  (%%edi);\n"
-		 "	movb  %%dl, 4(%%edi);\n"
-		 
-		 "	movb 1(%%esi), %%al;\n"
-		 "	movb 5(%%esi), %%dl;\n"
-		 "	movb  (%%ebx,%%eax), %%al;\n"
-		 "	movb  (%%ebx,%%edx), %%dl;\n"
-		 "	movb  %%al, 1(%%edi);\n"
-		 "	movb  %%dl, 5(%%edi);\n"
-		 
-		 "	movb 2(%%esi), %%al;\n"
-		 "	movb 6(%%esi), %%dl;\n"
-		 "	movb  (%%ebx,%%eax), %%al;\n"
-		 "	movb  (%%ebx,%%edx), %%dl;\n"
-		 "	movb  %%al, 2(%%edi);\n"
-		 "	movb  %%dl, 6(%%edi);\n"
-		 
-		 "	movb 3(%%esi), %%al;\n"
-		 "	movb 7(%%esi), %%dl;\n"
-		 "	addl  $8, %%esi;\n"
-		 "	movb  (%%ebx,%%eax), %%al;\n"
-		 "	movb  (%%ebx,%%edx), %%dl;\n"
-		 "	movb  %%al, 3(%%edi);\n"
-		 "	movb  %%dl, 7(%%edi);\n"
-		 
-		 "	cmpl  %%ecx, %%esi;\n"
-		 "	jb 1b;\n"
-		 "	popl %%edx;\n"
-		 "	popl %%eax;"
-		 : : 
-		 
-		 "b" (__gf_mulc_),
-		 "D" (dst1-8),
-		 "S" (src1),
-		 "c" (sz+src1) :
-		 "memory", "eax", "edx"
-	);
+         "pushl %%edx;\n"
+         "xorl %%eax,%%eax;\n"
+         "  xorl %%edx,%%edx;\n"
+         "1:"
+         "  addl  $8, %%edi;\n"
+
+         "  movb  (%%esi), %%al;\n"
+         "  movb 4(%%esi), %%dl;\n"
+         "  movb  (%%ebx,%%eax), %%al;\n"
+         "  movb  (%%ebx,%%edx), %%dl;\n"
+         "  movb  %%al,  (%%edi);\n"
+         "  movb  %%dl, 4(%%edi);\n"
+
+         "  movb 1(%%esi), %%al;\n"
+         "  movb 5(%%esi), %%dl;\n"
+         "  movb  (%%ebx,%%eax), %%al;\n"
+         "  movb  (%%ebx,%%edx), %%dl;\n"
+         "  movb  %%al, 1(%%edi);\n"
+         "  movb  %%dl, 5(%%edi);\n"
+
+         "  movb 2(%%esi), %%al;\n"
+         "  movb 6(%%esi), %%dl;\n"
+         "  movb  (%%ebx,%%eax), %%al;\n"
+         "  movb  (%%ebx,%%edx), %%dl;\n"
+         "  movb  %%al, 2(%%edi);\n"
+         "  movb  %%dl, 6(%%edi);\n"
+
+         "  movb 3(%%esi), %%al;\n"
+         "  movb 7(%%esi), %%dl;\n"
+         "  addl  $8, %%esi;\n"
+         "  movb  (%%ebx,%%eax), %%al;\n"
+         "  movb  (%%ebx,%%edx), %%dl;\n"
+         "  movb  %%al, 3(%%edi);\n"
+         "  movb  %%dl, 7(%%edi);\n"
+
+         "  cmpl  %%ecx, %%esi;\n"
+         "  jb 1b;\n"
+         "  popl %%edx;\n"
+         "  popl %%eax;"
+         : :
+
+         "b" (__gf_mulc_),
+         "D" (dst1-8),
+         "S" (src1),
+         "c" (sz+src1) :
+         "memory", "eax", "edx"
+    );
 }
 #else
 # define mul1 slow_mul1
@@ -554,106 +554,106 @@ invert_mat(gf *src, int k)
 
     memset(id_row, 0, k*sizeof(gf));
     DEB( pivloops=0; pivswaps=0 ; /* diagnostic */ )
-	/*
-	 * ipiv marks elements already used as pivots.
-	 */
-	for (i = 0; i < k ; i++)
-	    ipiv[i] = 0 ;
+    /*
+     * ipiv marks elements already used as pivots.
+     */
+    for (i = 0; i < k ; i++)
+        ipiv[i] = 0 ;
 
     for (col = 0; col < k ; col++) {
-	gf *pivot_row ;
-	/*
-	 * Zeroing column 'col', look for a non-zero element.
-	 * First try on the diagonal, if it fails, look elsewhere.
-	 */
-	irow = icol = -1 ;
-	if (ipiv[col] != 1 && src[col*k + col] != 0) {
-	    irow = col ;
-	    icol = col ;
-	    goto found_piv ;
-	}
-	for (row = 0 ; row < k ; row++) {
-	    if (ipiv[row] != 1) {
-		for (ix = 0 ; ix < k ; ix++) {
-		    DEB( pivloops++ ; )
-			if (ipiv[ix] == 0) {
-			    if (src[row*k + ix] != 0) {
-				irow = row ;
-				icol = ix ;
-				goto found_piv ;
-			    }
-			} else if (ipiv[ix] > 1) {
-			    fprintf(stderr, "singular matrix\n");
-			    goto fail ; 
-			}
-		}
-	    }
-	}
-	if (icol == -1) {
-	    fprintf(stderr, "XXX pivot not found!\n");
-	    goto fail ;
-	}
+    gf *pivot_row ;
+    /*
+     * Zeroing column 'col', look for a non-zero element.
+     * First try on the diagonal, if it fails, look elsewhere.
+     */
+    irow = icol = -1 ;
+    if (ipiv[col] != 1 && src[col*k + col] != 0) {
+        irow = col ;
+        icol = col ;
+        goto found_piv ;
+    }
+    for (row = 0 ; row < k ; row++) {
+        if (ipiv[row] != 1) {
+        for (ix = 0 ; ix < k ; ix++) {
+            DEB( pivloops++ ; )
+            if (ipiv[ix] == 0) {
+                if (src[row*k + ix] != 0) {
+                irow = row ;
+                icol = ix ;
+                goto found_piv ;
+                }
+            } else if (ipiv[ix] > 1) {
+                fprintf(stderr, "singular matrix\n");
+                goto fail ;
+            }
+        }
+        }
+    }
+    if (icol == -1) {
+        fprintf(stderr, "XXX pivot not found!\n");
+        goto fail ;
+    }
  found_piv:
-	++(ipiv[icol]) ;
-	/*
-	 * swap rows irow and icol, so afterwards the diagonal
-	 * element will be correct. Rarely done, not worth
-	 * optimizing.
-	 */
-	if (irow != icol) {
-	    for (ix = 0 ; ix < k ; ix++ ) {
-		SWAP( src[irow*k + ix], src[icol*k + ix], gf) ;
-	    }
-	}
-	indxr[col] = irow ;
-	indxc[col] = icol ;
-	pivot_row = &src[icol*k] ;
-	c = pivot_row[icol] ;
-	if (c == 0) {
-	    fprintf(stderr, "singular matrix 2\n");
-	    goto fail ;
-	}
-	if (c != 1 ) { /* otherwhise this is a NOP */
-	    /*
-	     * this is done often , but optimizing is not so
-	     * fruitful, at least in the obvious ways (unrolling)
-	     */
-	    DEB( pivswaps++ ; )
-		c = inverse[ c ] ;
-	    pivot_row[icol] = 1 ;
-	    for (ix = 0 ; ix < k ; ix++ )
-		pivot_row[ix] = gf_mul(c, pivot_row[ix] );
-	}
-	/*
-	 * from all rows, remove multiples of the selected row
-	 * to zero the relevant entry (in fact, the entry is not zero
-	 * because we know it must be zero).
-	 * (Here, if we know that the pivot_row is the identity,
-	 * we can optimize the addmul).
-	 */
-	id_row[icol] = 1;
-	if (memcmp(pivot_row, id_row, k*sizeof(gf)) != 0) {
-	    for (p = src, ix = 0 ; ix < k ; ix++, p += k ) {
-		if (ix != icol) {
-		    c = p[icol] ;
-		    p[icol] = 0 ;
-		    addmul(p, pivot_row, c, k );
-		}
-	    }
-	}
-	id_row[icol] = 0;
+    ++(ipiv[icol]) ;
+    /*
+     * swap rows irow and icol, so afterwards the diagonal
+     * element will be correct. Rarely done, not worth
+     * optimizing.
+     */
+    if (irow != icol) {
+        for (ix = 0 ; ix < k ; ix++ ) {
+        SWAP( src[irow*k + ix], src[icol*k + ix], gf) ;
+        }
+    }
+    indxr[col] = irow ;
+    indxc[col] = icol ;
+    pivot_row = &src[icol*k] ;
+    c = pivot_row[icol] ;
+    if (c == 0) {
+        fprintf(stderr, "singular matrix 2\n");
+        goto fail ;
+    }
+    if (c != 1 ) { /* otherwhise this is a NOP */
+        /*
+         * this is done often , but optimizing is not so
+         * fruitful, at least in the obvious ways (unrolling)
+         */
+        DEB( pivswaps++ ; )
+        c = inverse[ c ] ;
+        pivot_row[icol] = 1 ;
+        for (ix = 0 ; ix < k ; ix++ )
+        pivot_row[ix] = gf_mul(c, pivot_row[ix] );
+    }
+    /*
+     * from all rows, remove multiples of the selected row
+     * to zero the relevant entry (in fact, the entry is not zero
+     * because we know it must be zero).
+     * (Here, if we know that the pivot_row is the identity,
+     * we can optimize the addmul).
+     */
+    id_row[icol] = 1;
+    if (memcmp(pivot_row, id_row, k*sizeof(gf)) != 0) {
+        for (p = src, ix = 0 ; ix < k ; ix++, p += k ) {
+        if (ix != icol) {
+            c = p[icol] ;
+            p[icol] = 0 ;
+            addmul(p, pivot_row, c, k );
+        }
+        }
+    }
+    id_row[icol] = 0;
     } /* done all columns */
     for (col = k-1 ; col >= 0 ; col-- ) {
-	if (indxr[col] <0 || indxr[col] >= k)
-	    fprintf(stderr, "AARGH, indxr[col] %d\n", indxr[col]);
-	else if (indxc[col] <0 || indxc[col] >= k)
-	    fprintf(stderr, "AARGH, indxc[col] %d\n", indxc[col]);
-	else
-	    if (indxr[col] != indxc[col] ) {
-		for (row = 0 ; row < k ; row++ ) {
-		    SWAP( src[row*k + indxr[col]], src[row*k + indxc[col]], gf) ;
-		}
-	    }
+    if (indxr[col] <0 || indxr[col] >= k)
+        fprintf(stderr, "AARGH, indxr[col] %d\n", indxr[col]);
+    else if (indxc[col] <0 || indxc[col] >= k)
+        fprintf(stderr, "AARGH, indxc[col] %d\n", indxc[col]);
+    else
+        if (indxr[col] != indxc[col] ) {
+        for (row = 0 ; row < k ; row++ ) {
+            SWAP( src[row*k + indxr[col]], src[row*k + indxc[col]], gf) ;
+        }
+        }
     }
     error = 0 ;
  fail:
@@ -668,11 +668,11 @@ void fec_init(void)
     generate_gf();
     TOCK(ticks[0]);
     DDB(fprintf(stderr, "generate_gf took %ldus\n", ticks[0]);)
-	TICK(ticks[0]);
+    TICK(ticks[0]);
     init_mul_table();
     TOCK(ticks[0]);
     DDB(fprintf(stderr, "init_mul_table took %ldus\n", ticks[0]);)
-	fec_initialized = 1 ;
+    fec_initialized = 1 ;
 }
 
 
@@ -1010,7 +1010,7 @@ int reed_solomon_decode(reed_solomon* rs,
             dataShards, nr_fec_blocks, block_size);
 }
 
-/** 
+/**
  * input:
  * rs
  * shards[rs->shards][block_size]
@@ -1020,7 +1020,7 @@ int reed_solomon_encode2(reed_solomon* rs, unsigned char** shards, int block_siz
     return 0;
 }
 
-/** 
+/**
  * input:
  * rs
  * shards[rs->shards][block_size]
