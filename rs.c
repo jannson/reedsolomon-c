@@ -783,7 +783,7 @@ static gf* multiply1(gf *a, int ar, int ac, gf *b, int br, int bc) {
 }
 
 /* copy from golang rs version */
-static int code_some_shards(gf* matrixRows, gf** inputs, gf** outputs,
+static inline int code_some_shards(gf* matrixRows, gf** inputs, gf** outputs,
         int dataShards, int outputCount, int byteCount) {
     gf* in;
     int iRow, c;

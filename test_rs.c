@@ -85,7 +85,7 @@ void test_002(void) {
 
 void test_003(void) {
     char text[] = "hello world hello world ", output[256];
-    int block_size = 4;
+    int block_size = 2;
     int nrDataBlocks = (sizeof(text)/sizeof(char) - 1) / block_size;
     unsigned char* data_blocks[128];
     unsigned char* fec_blocks[128];
