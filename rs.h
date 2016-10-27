@@ -2,7 +2,9 @@
 #define __RS_H_
 
 /* use small value to save memory */
+#ifndef DATA_SHARDS_MAX
 #define DATA_SHARDS_MAX (255)
+#endif
 
 /* use other memory allocator */
 #define RS_MALLOC(x)    malloc(x)
@@ -26,6 +28,7 @@ reed_solomon* reed_solomon_new(int data_shards, int parity_shards);
 void reed_solomon_release(reed_solomon* rs);
 
 /**
+ * encode one shard
  * input:
  * rs
  * data_blocks[rs->data_shards][block_size]
@@ -37,7 +40,9 @@ int reed_solomon_encode(reed_solomon* rs,
         int block_size);
 
 
-/** input:
+/**
+ * decode one shard
+ * input:
  * rs
  * original data_blocks[rs->data_shards][block_size]
  * dec_fec_blocks[nr_fec_blocks][block_size]
@@ -54,17 +59,22 @@ int reed_solomon_decode(reed_solomon* rs,
         int nr_fec_blocks);
 
 /**
+ * encode a big size of buffer
  * input:
  * rs
- * shards[rs->shards][block_size]
+ * nr_shards: assert(0 == nr_shards % rs->data_shards)
+ * shards[nr_shards][block_size]
  * */
-int reed_solomon_encode2(reed_solomon* rs, unsigned char** shards, int block_size);
+int reed_solomon_encode2(reed_solomon* rs, unsigned char** shards, int nr_shards, int block_size);
 
 /**
+ * reconstruct a big size of buffer
  * input:
  * rs
- * shards[rs->shards][block_size]
+ * nr_shards: assert(0 == nr_shards % rs->data_shards)
+ * shards[nr_shards][block_size]
+ * marks[nr_shards] marks as errors
  * */
-int reed_solomon_reconstruct(reed_solomon* rs, unsigned char** shards, int block_size);
+int reed_solomon_reconstruct(reed_solomon* rs, unsigned char** shards, unsigned char* marks, int nr_shards, int block_size);
 #endif
 

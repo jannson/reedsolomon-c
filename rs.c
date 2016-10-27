@@ -894,6 +894,7 @@ void reed_solomon_release(reed_solomon* rs) {
 }
 
 /**
+ * encode one shard
  * input:
  * rs
  * data_blocks[rs->data_shards][block_size]
@@ -909,7 +910,9 @@ int reed_solomon_encode(reed_solomon* rs,
             , rs->data_shards, rs->parity_shards, block_size);
 }
 
-/** input:
+/**
+ * decode one shard
+ * input:
  * rs
  * original data_blocks[rs->data_shards][block_size]
  * dec_fec_blocks[nr_fec_blocks][block_size]
@@ -1009,22 +1012,88 @@ int reed_solomon_decode(reed_solomon* rs,
 }
 
 /**
+ * encode a big size of buffer
  * input:
  * rs
- * shards[rs->shards][block_size]
+ * nr_shards: assert(0 == nr_shards % rs->shards)
+ * shards[nr_shards][block_size]
  * */
-int reed_solomon_encode2(reed_solomon* rs, unsigned char** shards, int block_size) {
-    //TODO
+int reed_solomon_encode2(reed_solomon* rs, unsigned char** shards, int nr_shards, int block_size) {
+    unsigned char** data_blocks;
+    unsigned char** fec_blocks;
+    int i, ds = rs->data_shards, ps = rs->parity_shards, ss = rs->shards;
+    i = nr_shards / ss;
+    data_blocks = shards;
+    fec_blocks = &shards[(i*ds)];
+
+    for(i = 0; i < nr_shards; i += ss) {
+        reed_solomon_encode(rs, data_blocks, fec_blocks, block_size);
+        data_blocks += ds;
+        fec_blocks += ps;
+    }
     return 0;
 }
 
 /**
+ * reconstruct a big size of buffer
  * input:
  * rs
- * shards[rs->shards][block_size]
+ * nr_shards: assert(0 == nr_shards % rs->data_shards)
+ * shards[nr_shards][block_size]
+ * marks[nr_shards] marks as errors
  * */
-int reed_solomon_reconstruct(reed_solomon* rs, unsigned char** shards, int block_size) {
-    //TODO
-    return 0;
+int reed_solomon_reconstruct(reed_solomon* rs,
+        unsigned char** shards,
+        unsigned char* marks,
+        int nr_shards,
+        int block_size) {
+    unsigned char *dec_fec_blocks[DATA_SHARDS_MAX];
+    unsigned int fec_block_nos[DATA_SHARDS_MAX];
+    unsigned int erased_blocks[DATA_SHARDS_MAX];
+    unsigned char* fec_marks;
+    unsigned char** data_blocks;
+    int i, j, dn, pn, n, ds = rs->data_shards, ps = rs->parity_shards, ss = rs->shards;
+    int err = 0;
+    n = nr_shards / rs->shards;
+    fec_marks = &marks[n*rs->shards];
+    data_blocks = shards;
+
+    for(j = 0; j < n; j++) {
+        dn = 0;
+        for(i = 0; i < ds; i++) {
+            if(marks[i]) {
+                //errors
+                erased_blocks[dn++] = i;
+            }
+        }
+        if(dn > 0) {
+            pn = 0;
+            for(i = 0; i < ps && pn < dn; i++) {
+                if(!fec_marks[i]) {
+                    //got valid fec row
+                    fec_block_nos[pn] = i;
+                    dec_fec_blocks[pn] = shards[n*ss+i];
+                    pn++;
+                }
+            }
+
+            if(dn == pn) {
+                reed_solomon_decode(rs
+                        , data_blocks
+                        , block_size
+                        , dec_fec_blocks
+                        , fec_block_nos
+                        , erased_blocks
+                        , dn);
+            } else {
+                err = -1;
+            }
+        }
+        data_blocks += ds;
+        marks += ds;
+        fec_marks += ps;
+    }
+
+    return err;
 }
 
