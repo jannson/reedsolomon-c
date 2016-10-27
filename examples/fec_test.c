@@ -120,17 +120,17 @@ int main(int argc, char **argv) {
 
     for(i = 0; i < nrBlocks; i++) {
         if(zilch[i]) {
-        fec_pos++;
-        //if(random() % 2)
-        //    fec_pos++;
-        erased_blocks[nr_fec_blocks] = i;
-        fec_block_nos[nr_fec_blocks] = fec_pos;
-        fprintf(stderr, "Fixing %d with %d (%p)\n",
-            i, fec_pos, fec_blocks[fec_pos]);
-        dec_fec_blocks[nr_fec_blocks] = fec_blocks[fec_pos];
-        nr_fec_blocks++;
-        assert(fec_pos <= redundancy);
-        assert(nr_fec_blocks <= redundancy);
+            fec_pos++;
+            //if(random() % 2)
+            //    fec_pos++;
+            erased_blocks[nr_fec_blocks] = i;
+            fec_block_nos[nr_fec_blocks] = fec_pos;
+            fprintf(stderr, "Fixing %d with %d (%p)\n",
+                i, fec_pos, fec_blocks[fec_pos]);
+            dec_fec_blocks[nr_fec_blocks] = fec_blocks[fec_pos];
+            nr_fec_blocks++;
+            assert(fec_pos <= redundancy);
+            assert(nr_fec_blocks <= redundancy);
         }
     }
 

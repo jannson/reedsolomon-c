@@ -807,12 +807,10 @@ reed_solomon* reed_solomon_new(int data_shards, int parity_shards) {
     int err = 0;
     reed_solomon* rs = NULL;
 
-    do {
-        if(!fec_initialized) {
-            /* MUST use fec_init once time first */
-            return NULL;
-        }
+    /* MUST use fec_init once time first */
+    assert(fec_initialized);
 
+    do {
         rs = RS_MALLOC(sizeof(reed_solomon));
         if(NULL == rs) {
             return NULL;
