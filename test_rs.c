@@ -102,6 +102,38 @@ void test_multiply(void) {
 
 void test_inverse(void) {
     printf("%s:\n", __FUNCTION__);
+    {
+        gf a[] = {56, 23, 98, 3, 100, 200, 45, 201, 123};
+        gf ae[] = {175, 133, 33, 130, 13, 245, 112, 35, 126};
+        int rlt = invert_mat(a, 3);
+        assert(0 == rlt);
+        rlt = memcmp(a, ae, 3*3);
+        assert(0 == rlt);
+    }
+
+    {
+        gf a[] = {  1, 0, 0, 0, 0,
+                    0, 1, 0, 0, 0,
+                    0, 0, 0, 1, 0,
+                    0, 0, 0, 0, 1,
+                    7, 7, 6, 6, 1};
+        gf ae[] = {1, 0, 0, 0, 0,
+                   0, 1, 0, 0, 0,
+                   123, 123, 1, 122, 122,
+                   0, 0, 1, 0, 0,
+                   0, 0, 0, 1, 0};
+        int rlt = invert_mat(a, 5);
+        assert(0 == rlt);
+        rlt = memcmp(a, ae, 5*5);
+        assert(0 == rlt);
+    }
+
+    {
+        /* error matrix */
+        gf a[] = {4,2,12,6};
+        int rlt = invert_mat(a, 2);
+        assert(0 != rlt);
+    }
 }
 
 void test_one_encoding(void) {
@@ -336,6 +368,7 @@ int main(void) {
     test_galois();
     test_sub_matrix();
     test_multiply();
+    test_inverse();
 
     //test_001();
     //test_002();
