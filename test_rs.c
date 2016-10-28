@@ -136,8 +136,263 @@ void test_inverse(void) {
     }
 }
 
+unsigned char* test_create_random(reed_solomon *rs, int data_size, int block_size) {
+    struct timeval tv;
+    unsigned char* data;
+    int i, n, seed, nr_blocks;
+
+    gettimeofday(&tv, 0);
+    seed = tv.tv_sec ^ tv.tv_usec;
+    srandom(seed);
+
+    nr_blocks = (data_size+block_size-1)/block_size;
+    nr_blocks = ((nr_blocks + rs->data_shards - 1)/ rs->data_shards) * rs->data_shards;
+    n = nr_blocks / rs->data_shards;
+    nr_blocks += n * rs->parity_shards;
+
+    data = malloc(nr_blocks * block_size);
+    for(i = 0; i < data_size; i++) {
+        data[i] = (unsigned char)(random() % 255);
+    }
+    memset(data + data_size, 0, nr_blocks*block_size - data_size);
+
+    return data;
+}
+
+int test_create_encoding(
+        reed_solomon *rs,
+        unsigned char *data,
+        int data_size,
+        int block_size
+        ) {
+    unsigned char **data_blocks;
+    int data_shards, parity_shards;
+    int i, n, nr_shards, nr_blocks, nr_fec_blocks;
+
+    data_shards = rs->data_shards;
+    parity_shards = rs->parity_shards;
+    nr_blocks = (data_size+block_size-1)/block_size;
+    nr_blocks = ((nr_blocks+data_shards-1)/data_shards) * data_shards;
+    n = nr_blocks / data_shards;
+    nr_fec_blocks = n * parity_shards;
+    nr_shards = nr_blocks + nr_fec_blocks;
+
+    data_blocks = (unsigned char**)malloc(nr_shards * sizeof(unsigned char*));
+    for(i = 0; i < nr_shards; i++) {
+        data_blocks[i] = data + i*block_size;
+    }
+
+    n = reed_solomon_encode2(rs, data_blocks, nr_shards, block_size);
+    free(data_blocks);
+
+    return n;
+}
+
+int test_data_decode(
+        reed_solomon *rs,
+        unsigned char *data,
+        int data_size,
+        int block_size,
+        int *erases,
+        int erase_count) {
+    unsigned char **data_blocks;
+    unsigned char *zilch;
+    int data_shards, parity_shards;
+    int i, j, n, nr_shards, nr_blocks, nr_fec_blocks;
+
+    data_shards = rs->data_shards;
+    parity_shards = rs->parity_shards;
+    nr_blocks = (data_size+block_size-1)/block_size;
+    nr_blocks = ((nr_blocks+data_shards-1)/data_shards) * data_shards;
+    n = nr_blocks / data_shards;
+    nr_fec_blocks = n * parity_shards;
+    nr_shards = nr_blocks + nr_fec_blocks;
+
+    data_blocks = (unsigned char**)malloc(nr_shards * sizeof(unsigned char*));
+    for(i = 0; i < nr_shards; i++) {
+        data_blocks[i] = data + i*block_size;
+    }
+
+    zilch = (unsigned char*)calloc(1, nr_shards);
+    for(i = 0; i < erase_count; i++) {
+        j = erases[i];
+        memset(data + j*block_size, 137, block_size);
+        zilch[j] = 1; //mark as erased
+    }
+
+    n = reed_solomon_reconstruct(rs, data_blocks, zilch, nr_shards, block_size);
+    free(data_blocks);
+    free(zilch);
+
+    return n;
+}
+
 void test_one_encoding(void) {
+    reed_solomon *rs;
+    unsigned char* data;
+    int block_size = 50000;
+    int data_size = 13*block_size;
+    int err;
+
     printf("%s:\n", __FUNCTION__);
+
+    rs = reed_solomon_new(10, 3);
+    data = test_create_random(rs, data_size, block_size);
+    err = test_create_encoding(rs, data, data_size, block_size);
+
+    free(data);
+    reed_solomon_release(rs);
+
+    assert(0 == err);
+}
+
+int test_one_decoding_13(int *erases, int erase_count) {
+    reed_solomon *rs;
+    unsigned char *data, *origin;
+    int block_size = 50000;
+    int data_size = 10*block_size;
+    int err, err2;
+
+    rs = reed_solomon_new(10, 3);
+    data = test_create_random(rs, data_size, block_size);
+    err = test_create_encoding(rs, data, data_size, block_size);
+    assert(0 == err);
+
+    origin = (unsigned char*)malloc(data_size);
+    memcpy(origin, data, data_size);
+
+    err = test_data_decode(rs, data, data_size, block_size, erases, erase_count);
+    if(0 == err) {
+        err2 = memcmp(origin, data, data_size);
+        assert(0 == err2);
+    } else {
+        //failed here
+        err2 = memcmp(origin, data, data_size);
+        assert(0 != err2);
+    }
+
+    free(data);
+    free(origin);
+    reed_solomon_release(rs);
+
+    return err;
+}
+
+void test_one_decoding(void) {
+    printf("%s:\n", __FUNCTION__);
+
+    {
+        int erases[] = {0};
+        int err;
+
+        // lost nothing
+        err = test_one_decoding_13(erases, 0);
+        assert(0 == err);
+    }
+
+    {
+        int erases[] = {0};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        // lost only one
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 5;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 9;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 11;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+    }
+
+    {
+        int erases[] = {0, 1};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        // lost two
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 3;
+        erases[1] = 7;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 11;
+        erases[1] = 9;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 11;
+        erases[1] = 12;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+    }
+
+    {
+        int erases[] = {0, 1, 4};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        // lost three
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 3;
+        erases[1] = 8;
+        erases[2] = 7;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 11;
+        erases[1] = 9;
+        erases[2] = 1;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 11;
+        erases[1] = 12;
+        erases[2] = 9;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 11;
+        erases[1] = 12;
+        erases[2] = 9;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+
+        erases[0] = 11;
+        erases[1] = 12;
+        erases[2] = 10;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 == err);
+    }
+
+    {
+        int erases[] = {0, 1, 4, 8};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        // lost 4, failed!
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 != err);
+
+        erases[0] = 11;
+        erases[1] = 12;
+        erases[2] = 10;
+        erases[3] = 9;
+        err = test_one_decoding_13(erases, erases_count);
+        assert(0 != err);
+    }
 }
 
 void test_encoding(void) {
@@ -275,7 +530,7 @@ void test_003(void) {
 }
 
 void test_004(void) {
-    char text[] = "hello world hello world ";
+    //char text[] = "hello world hello world ";
     int dataShards = 30;
     int parityShards = 21;
     int blockSize = 280;
@@ -369,6 +624,8 @@ int main(void) {
     test_sub_matrix();
     test_multiply();
     test_inverse();
+    test_one_encoding();
+    test_one_decoding();
 
     //test_001();
     //test_002();
