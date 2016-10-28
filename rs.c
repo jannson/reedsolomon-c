@@ -33,7 +33,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  *
- * Reimplement by Jannson: compitible for golang version of https://github.com/klauspost/reedsolomon
+ * Reimplement by Jannson (20161018): compitible for golang version of https://github.com/klauspost/reedsolomon
  */
 
 /*
