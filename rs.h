@@ -7,9 +7,17 @@
 #endif
 
 /* use other memory allocator */
+#ifndef RS_MALLOC
 #define RS_MALLOC(x)    malloc(x)
+#endif
+
+#ifndef RS_FREE
 #define RS_FREE(x)      free(x)
+#endif
+
+#ifndef RS_CALLOC
 #define RS_CALLOC(n, x) calloc(n, x)
+#endif
 
 typedef struct _reed_solomon {
     int data_shards;
