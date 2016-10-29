@@ -595,7 +595,7 @@ static gf galExp(gf a, gf n) {
     return gf_exp[logResult];
 }
 
-static gf galMultiply(gf a, gf b) {
+static inline gf galMultiply(gf a, gf b) {
     return gf_mul_table[ ((int)a << 8) + (int)b ];
 }
 
@@ -645,7 +645,8 @@ static gf* multiply1(gf *a, int ar, int ac, gf *b, int br, int bc) {
             for(c = 0; c < bc; c++) {
                 tg = 0;
                 for(i = 0; i < ac; i++) {
-                    tg ^= gf_mul_table[ ((int)a[r*ac+i] << 8) + (int)b[i*bc+c] ];
+                    /* tg ^= gf_mul_table[ ((int)a[r*ac+i] << 8) + (int)b[i*bc+c] ]; */
+                    tg ^= galMultiply(a[r*ac+i], b[i*bc+c]);
                 }
 
                 new_m[ptr++] = tg;
@@ -935,7 +936,7 @@ int reed_solomon_reconstruct(reed_solomon* rs,
 
     data_blocks = shards;
     n = nr_shards / rs->shards;
-    fec_marks = marks + n*ds;
+    fec_marks = marks + n*ds; //after all data, is't fec marks
     fec_blocks = shards + n*ds;
 
     for(j = 0; j < n; j++) {

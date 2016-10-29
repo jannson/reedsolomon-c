@@ -231,7 +231,7 @@ void test_one_encoding(void) {
     reed_solomon *rs;
     unsigned char* data;
     int block_size = 50000;
-    int data_size = 13*block_size;
+    int data_size = 10*block_size;
     int err;
 
     printf("%s:\n", __FUNCTION__);
@@ -395,12 +395,139 @@ void test_one_decoding(void) {
     }
 }
 
+int test_one_decoding_13_6(int *erases, int erase_count) {
+    reed_solomon *rs;
+    unsigned char *data, *origin;
+    int block_size = 50000;
+    int data_size = 10*block_size*6;
+    int err, err2;
+
+    rs = reed_solomon_new(10, 3);
+    data = test_create_random(rs, data_size, block_size);
+    err = test_create_encoding(rs, data, data_size, block_size);
+    assert(0 == err);
+
+    origin = (unsigned char*)malloc(data_size);
+    memcpy(origin, data, data_size);
+
+    err = test_data_decode(rs, data, data_size, block_size, erases, erase_count);
+    if(0 == err) {
+        err2 = memcmp(origin, data, data_size);
+        assert(0 == err2);
+    } else {
+        //failed here
+        err2 = memcmp(origin, data, data_size);
+        assert(0 != err2);
+    }
+
+    free(data);
+    free(origin);
+    reed_solomon_release(rs);
+
+    return err;
+}
+
 void test_encoding(void) {
+    reed_solomon *rs;
+    unsigned char *data;
+    int block_size = 50000;
+    //multi shards encoding
+    int data_size = 13*block_size*6;
+    int err;
+
     printf("%s:\n", __FUNCTION__);
+
+    rs = reed_solomon_new(10, 3);
+    data = test_create_random(rs, data_size, block_size);
+    err = test_create_encoding(rs, data, data_size, block_size);
+
+    free(data);
+    reed_solomon_release(rs);
+
+    assert(0 == err);
 }
 
 void test_reconstruct(void) {
+#define FEC_START (10*6)
     printf("%s:\n", __FUNCTION__);
+
+    {
+        int erases[] = {0};
+        int err;
+
+        // lost nothing
+        err = test_one_decoding_13_6(erases, 0);
+        assert(0 == err);
+    }
+
+    {
+        int erases[] = {0, 1, 9, 10+2, 10+4, 10+9};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        // shard1 shard2 both lost three 
+        err = test_one_decoding_13_6(erases, erases_count);
+        assert(0 == err);
+    }
+
+    {
+        int erases[] = {0, 9, FEC_START + 1, 10+2, 10+9, FEC_START + 6 + 2};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        // shard1 shard2 both lost three, and both lost one in fec
+        err = test_one_decoding_13_6(erases, erases_count);
+        assert(0 == err);
+    }
+
+    {
+        int erases[] = {11, 12, 10, 9};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        /* this is ok. not lost 4 but shard1 lost 1, shard2 lost 3, we can reconstruct it */
+        err = test_one_decoding_13_6(erases, erases_count);
+        assert(0 == err);
+    }
+
+    {
+        int erases[] = {0, 1, 4, 8};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        // shard1 lost 4, failed!
+        err = test_one_decoding_13_6(erases, erases_count);
+        assert(0 != err);
+    }
+
+    {
+        int erases[] = {10, 11, 14, 18};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        // shard2 lost 4, failed!
+        err = test_one_decoding_13_6(erases, erases_count);
+        assert(0 != err);
+    }
+
+    {
+        int erases[] = {0, 1, 4, 8, 10, 11, 14, 18};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        // shard1 and shard2 both lost 4, failed!
+        err = test_one_decoding_13_6(erases, erases_count);
+        assert(0 != err);
+    }
+
+    {
+        int erases[] = {11, 12, 10, 9, FEC_START+3+0, FEC_START+3+1, FEC_START+3+2};
+        int erases_count = sizeof(erases)/sizeof(int);
+        int err;
+
+        err = test_one_decoding_13_6(erases, erases_count);
+        assert(0 != err);
+    }
 }
 
 void benchmarkEncode(void) {
@@ -626,6 +753,9 @@ int main(void) {
     test_inverse();
     test_one_encoding();
     test_one_decoding();
+    test_encoding();
+    test_reconstruct();
+    printf("reach here means test all ok\n");
 
     //test_001();
     //test_002();
