@@ -113,8 +113,9 @@ Implement a tool to test C and golang version.
 [simple-encoder.c](https://github.com/jannson/reedsolomon-c/raw/master/examples/fec_test.c) VS [simple-encoder.go](https://github.com/klauspost/reedsolomon/raw/master/examples/simple-encoder.go)
 
 ```
-./simple-encoder -d 12 -p 6 -f CMakeCache.txt -o o2
-./go_simple-encoder --data 12 --par 6 --out o
+go build -o go-simple-encoder ../simple-encoder.go
+./go-simple-encoder --data 12 --par 6 --out o input.txt
+./simple-encoder -d 12 -p 6  -o o2 -f input.txt
 meld o o2
 ```
 
