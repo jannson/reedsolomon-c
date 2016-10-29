@@ -5,6 +5,7 @@
 #include <string.h>
 #include <assert.h>
 #include <sys/time.h>
+#include <time.h>
 
 #define PROFILE
 #include "rs.h"
@@ -530,8 +531,53 @@ void test_reconstruct(void) {
     }
 }
 
+double benchmarkEncodeTest(int n, int dataShards, int parityShards, int shardSize) {
+    clock_t start, end;
+    double millis;
+    unsigned char* data;
+    int i;
+    int dataSize = shardSize*dataShards;
+    reed_solomon* rs = reed_solomon_new(dataShards, parityShards);
+
+    data = test_create_random(rs, dataSize, shardSize);
+
+    start = clock();
+    for(i = 0; i < n; i++) {
+        test_create_encoding(rs, data, dataSize, shardSize);
+    }
+    end = clock();
+    millis = (double)(end - start) * 1000.0 / CLOCKS_PER_SEC;
+    return (millis);
+}
+
+/* TODO please check, is this benchmark ok? */
 void benchmarkEncode(void) {
+    double millis;
+    double per_sec_in_bytes;
+    double MB = 1024.0 * 1024.0;
+    double millis_to_sec = 1000*1000;
+    int n;
+    int size;
+
     printf("%s:\n", __FUNCTION__);
+
+    n = 20000;
+    size = 10000;
+    millis = benchmarkEncodeTest(n, 10, 2, size);
+
+    per_sec_in_bytes = (10*2*size/MB) * millis_to_sec * n / millis;
+    printf("10x2x10000, test_count=%d millis=%lf per_sec_in_bytes=%lfMB/s\n", n, millis, per_sec_in_bytes);
+
+    n = 200;
+    millis = benchmarkEncodeTest(n, 100, 20, size);
+    per_sec_in_bytes = (100*20*size/MB) * millis_to_sec * n / millis;
+    printf("100x20x10000, test_count=%d millis=%lf per_sec_in_bytes=%lfMB/s\n", n, millis, per_sec_in_bytes);
+
+    n = 200;
+    size = 1024*1024;
+    millis = benchmarkEncodeTest(n, 17, 3, size);
+    per_sec_in_bytes = (17*3*size/MB) * millis_to_sec * n / millis;
+    printf("17x3x(1024*1024), test_count=%d millis=%lf per_sec_in_bytes=%lfMB/s\n", n, millis, per_sec_in_bytes);
 }
 
 void test_001(void) {
@@ -756,6 +802,8 @@ int main(void) {
     test_encoding();
     test_reconstruct();
     printf("reach here means test all ok\n");
+
+    benchmarkEncode();
 
     //test_001();
     //test_002();
