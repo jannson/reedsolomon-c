@@ -471,7 +471,7 @@ void test_reconstruct(void) {
     }
 
     {
-        int erases[] = {0, 9, FEC_START + 1, 10+2, 10+9, FEC_START + 6 + 2};
+        int erases[] = {0, 9, FEC_START + 1, 10+2, 10+9, FEC_START + 3 + 2};
         int erases_count = sizeof(erases)/sizeof(int);
         int err;
 
