@@ -1,5 +1,5 @@
 # reedsolomon-c
-C compatible version for [klauspost-golang-reedsolomon](https://github.com/klauspost/reedsolomon).
+C compatible version for [golang-klauspost-reedsolomon](https://github.com/klauspost/reedsolomon).
 
 It can run in platform of MIPS/ARM/i386/x64 of linux, especially for some embedded projects.
 
@@ -108,5 +108,5 @@ I have implemented a benchmarkEncode in test_rs.c. but is this implement right ?
 
 # TODO
 
-Implement a tools to test C and golang version.
+Implement a tool to test C and golang version.
 
