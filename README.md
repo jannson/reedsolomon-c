@@ -110,3 +110,7 @@ I have implemented a benchmarkEncode in test_rs.c. but is this implement right ?
 
 Implement a tool to test C and golang version.
 
+# License
+
+published under an MIT license. See LICENSE file for more information.
+
