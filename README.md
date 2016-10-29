@@ -110,7 +110,7 @@ I have implemented a benchmarkEncode in test_rs.c. but is this implement right ?
 
 Implement a tool to test C and golang version.
 
-[simple-encoder.c](https://github.com/jannson/reedsolomon-c/raw/master/examples/fec_test.c) VS [simple-encoder.c](https://github.com/klauspost/reedsolomon/raw/master/examples/simple-encoder.go)
+[simple-encoder.c](https://github.com/jannson/reedsolomon-c/raw/master/examples/fec_test.c) VS [simple-encoder.go](https://github.com/klauspost/reedsolomon/raw/master/examples/simple-encoder.go)
 
 ```
 ./simple-encoder -d 12 -p 6 -f CMakeCache.txt -o o2
