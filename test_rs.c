@@ -673,7 +673,9 @@ void test_003(void) {
         fec_blocks[i] = (unsigned char*)&output[i*block_size + nrDataBlocks*block_size];
     }
     reed_solomon_encode(rs, data_blocks, fec_blocks, block_size);
-    //print_buf((gf*)output, "%d ", nrFecBlocks*block_size + nrDataBlocks*block_size);
+    printf("golang output(example/test_rs.go):\n [[104 101] [108 108] [111 32] [119 111] [114 108] [100 32] [104 101] [108 108] [111 32] [119 111] [114 108] [100 32] \n[157 178] [83 31] [48 240] [254 93] [31 89] [151 184]]\n");
+    printf("c verion output:\n");
+    print_buf((gf*)output, "%d ", nrFecBlocks*block_size + nrDataBlocks*block_size);
     //print_matrix1((gf*)output, nrDataBlocks + nrFecBlocks, block_size);
 
     //decode
@@ -807,7 +809,7 @@ int main(void) {
 
     //test_001();
     //test_002();
-    //test_003();
+    test_003();
     //test_004();
 
     return 0;
