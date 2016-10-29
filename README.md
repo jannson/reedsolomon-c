@@ -106,9 +106,17 @@ int test_data_decode(
 
 I have implemented a benchmarkEncode in test_rs.c. but is this implement right ? it's so quick, I think there maybe some mistake in benchmark test.
 
-# TODO
+# Compatible Test
 
 Implement a tool to test C and golang version.
+
+[simple-encoder.c](https://github.com/jannson/reedsolomon-c/raw/master/examples/fec_test.c) VS [simple-encoder.c](https://github.com/klauspost/reedsolomon/raw/master/examples/simple-encoder.go)
+
+```
+./simple-encoder -d 12 -p 6 -f CMakeCache.txt -o o2
+./go_simple-encoder --data 12 --par 6 --out o
+meld o o2
+```
 
 # License
 
