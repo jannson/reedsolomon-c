@@ -151,7 +151,7 @@ unsigned char* test_create_random(reed_solomon *rs, int data_size, int block_siz
     n = nr_blocks / rs->data_shards;
     nr_blocks += n * rs->parity_shards;
 
-    data = malloc(nr_blocks * block_size);
+    data = (unsigned char *) malloc(nr_blocks * block_size);
     for(i = 0; i < data_size; i++) {
         data[i] = (unsigned char)(random() % 255);
     }
@@ -724,7 +724,7 @@ void test_004(void) {
 
     //size = sizeof(text)/sizeof(char)-1;
     size = 1024*1024;
-    origin = malloc(size);
+    origin = (unsigned char *) malloc(size);
     //memcpy(origin, text, size);
     for(i = 0; i < size; i++) {
         origin[i] = (unsigned char)(random() % 255);
@@ -735,7 +735,7 @@ void test_004(void) {
     n = nrBlocks / dataShards;
     nrFecBlocks = n*parityShards;
     nrShards = nrBlocks + nrFecBlocks;
-    data = malloc(nrShards * blockSize);
+    data = (unsigned char *) malloc(nrShards * blockSize);
     memcpy(data, origin, size);
     memset(data + size, 0, nrShards*blockSize - size);
     printf("nrBlocks=%d nrFecBlocks=%d nrShards=%d n=%d left=%d\n", nrBlocks, nrFecBlocks, nrShards, n, nrShards*blockSize - size);

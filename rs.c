@@ -545,12 +545,21 @@ void fec_init(void)
 
 
 #ifdef PROFILE
+#ifdef __x86_64__
 static long long rdtsc(void)
 {
     unsigned long low, hi;
     asm volatile ("rdtsc" : "=d" (hi), "=a" (low));
     return ( (((long long)hi) << 32) | ((long long) low));
 }
+#elif __arm__
+static long long rdtsc(void)
+{
+    u64 val;
+    asm volatile("mrs %0, cntvct_el0" : "=r" (val));
+    return val;
+}
+#endif
 
 void print_matrix1(gf* matrix, int nrows, int ncols) {
     int i, j;
@@ -687,7 +696,7 @@ reed_solomon* reed_solomon_new(int data_shards, int parity_shards) {
     assert(fec_initialized);
 
     do {
-        rs = RS_MALLOC(sizeof(reed_solomon));
+        rs = (reed_solomon*) RS_MALLOC(sizeof(reed_solomon));
         if(NULL == rs) {
             return NULL;
         }
