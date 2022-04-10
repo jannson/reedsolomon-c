@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 
+#include <libgen.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/stat.h>

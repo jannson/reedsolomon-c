@@ -9,12 +9,21 @@
 #include "../rs.h"
 
 #ifndef PROFILE
-static inline long long rdtsc(void)
+#ifdef __x86_64__
+static long long rdtsc(void)
 {
     unsigned long low, hi;
     asm volatile ("rdtsc" : "=d" (hi), "=a" (low));
     return ( (((long long)hi) << 32) | ((long long) low));
 }
+#elif __arm__
+static long long rdtsc(void)
+{
+    u64 val;
+    asm volatile("mrs %0, cntvct_el0" : "=r" (val));
+    return val;
+}
+#endif
 #endif
 
 /*
